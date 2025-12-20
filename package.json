@@ -1,0 +1,23 @@
+{
+  "name": "numatix-trading-platform",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present",
+    "start": "npm run start --workspaces --if-present",
+    "clean": "rimraf apps/*/node_modules apps/*/.next packages/*/node_modules"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "rimraf": "^5.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@prisma/adapter-better-sqlite3": "^7.2.0",
+    "better-sqlite3": "^12.5.0"
+  }
+}

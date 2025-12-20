@@ -1,0 +1,21 @@
+node_modules/
+dist/
+.env
+.env.local
+*.log
+.DS_Store
+.vscode/
+.idea/
+
+# Prisma
+packages/database/dev.db
+packages/database/dev.db-journal
+packages/database/prisma/migrations/
+
+# Next.js
+apps/frontend/.next/
+apps/frontend/out/
+apps/frontend/.turbo/
+
+# Build outputs
+apps/*/dist/

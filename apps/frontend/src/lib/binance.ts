@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BINANCE_API = 'https://testnet.binance.vision/api';
+const BINANCE_API = 'https://api.binance.com/api';
 
 export interface Kline {
     time: number;
@@ -54,8 +54,9 @@ export const binanceAPI = {
     // Get all symbols
     getExchangeInfo: async () => {
         const response = await axios.get(`${BINANCE_API}/v3/exchangeInfo`);
+        const allowedQuotes = ['USDT', 'BTC', 'ETH'];
         return response.data.symbols
-            .filter((s: any) => s.status === 'TRADING' && s.quoteAsset === 'USDT')
+            .filter((s: any) => s.status === 'TRADING' && allowedQuotes.includes(s.quoteAsset))
             .map((s: any) => s.symbol);
     },
 };

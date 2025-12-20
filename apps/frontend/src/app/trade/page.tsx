@@ -51,9 +51,18 @@ export default function TradePage() {
     const loadSymbols = async () => {
       try {
         const availableSymbols = await binanceAPI.getExchangeInfo();
-        setSymbols(availableSymbols.slice(0, 50));
+        // Prioritize major pairs
+        const majors = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT'];
+        const btcPairs = availableSymbols.filter((s: string) => s.endsWith('BTC')).slice(0, 10);
+        const ethPairs = availableSymbols.filter((s: string) => s.endsWith('ETH')).slice(0, 10);
+        const used = new Set([...majors, ...btcPairs, ...ethPairs]);
+        const others = availableSymbols.filter((s: string) => !used.has(s)).slice(0, 40);
+        
+        setSymbols([...majors, ...btcPairs, ...ethPairs, ...others]);
       } catch (error) {
         console.error('Error loading symbols:', error);
+        // Fallback
+        setSymbols(['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT']);
       }
     };
     loadSymbols();
@@ -148,18 +157,23 @@ export default function TradePage() {
                 <div>
                    <h2 className="text-xl font-bold mb-6 text-gray-900">Portfolio</h2>
                    
-                   {/* Asset Selector (reusing existing but styled cleaner) */}
-                   <div className="mb-8 hidden"> {/* Hiding for now as image implies context is selected elsewhere or static, but let's keep it minimal if needed. Actually let's keep it but invisible or integrated? For now, let's keep it standard but clean. */}
-                     <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">Asset</label>
-                     <select
-                       value={symbol}
-                       onChange={(e) => setSymbol(e.target.value)}
-                       className="input-group w-full font-bold text-gray-900 bg-transparent"
-                     >
-                       {symbolOptions.map((s) => (
-                         <option key={s} value={s}>{s}</option>
-                       ))}
-                     </select>
+                   {/* Asset Selector */}
+                   <div className="mb-8">
+                     <label className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3 block">Select Asset</label>
+                     <div className="relative">
+                       <select
+                         value={symbol}
+                         onChange={(e) => setSymbol(e.target.value)}
+                         className="w-full h-12 pl-4 pr-10 bg-[var(--background)] border border-[var(--border)] rounded-xl font-bold text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none appearance-none transition-all cursor-pointer hover:bg-[var(--surface-hover)]"
+                       >
+                         {symbolOptions.map((s) => (
+                           <option key={s} value={s}>{s}</option>
+                         ))}
+                       </select>
+                       <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-muted">
+                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                       </div>
+                     </div>
                    </div>
 
                    <OrderForm symbol={symbol} onOrderPlaced={handleOrderPlaced} />
@@ -240,9 +254,9 @@ export default function TradePage() {
           </div>
 
           <div className="space-y-10">
-            <div className="card overflow-hidden !p-0 h-[500px]">
-              <div className="p-6 border-b border-[var(--border)] flex justify-between items-center">
-                <h3 className="text-xs font-bold text-muted uppercase tracking-widest">Market Visualizer</h3>
+            <div className="card !p-0 h-[500px]">
+              <div className="px-6 py-6 border-b border-[var(--border)] flex justify-between items-center">
+                <h3 className="p-3 text-sm font-bold text-muted uppercase tracking-widest">Market Visualizer</h3>
                 <div className="flex space-x-4">
                   <div className="w-2.5 h-2.5 rounded-full bg-green-500/20 animate-pulse"></div>
                   <div className="w-2.5 h-2.5 rounded-full bg-blue-500/20 animate-pulse [animation-delay:0.2s]"></div>
@@ -252,9 +266,8 @@ export default function TradePage() {
                 <TradingChart symbol={symbol} interval={interval} />
               </div>
             </div>
-
             <div className="card !p-0 min-h-[500px] overflow-hidden">
-               <OrdersTable refreshTrigger={refreshTrigger} lastUpdate={lastMessage} />
+              <OrdersTable refreshTrigger={refreshTrigger} lastUpdate={lastMessage} />
             </div>
           </div>
         </section>

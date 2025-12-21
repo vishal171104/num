@@ -57,23 +57,23 @@ function OrderFormComponent({ symbol, onOrderPlaced }: OrderFormProps) {
     <div className="flex flex-col space-y-6">
         
       {/* 1. Buy/Sell Pill Toggle */}
-      <div className="pill-toggle-container">
+      <div className="pill-toggle-container bg-[var(--surface-hover)] p-1 rounded-xl">
         <div 
             onClick={() => setSide('BUY')}
-            className={`pill-tab ${side === 'BUY' ? 'active text-black' : ''}`}
+            className={`pill-tab ${side === 'BUY' ? 'active text-[var(--background)] bg-[var(--foreground)]' : 'text-muted hover:text-[var(--foreground)]'}`}
         >
             BUY
         </div>
         <div 
             onClick={() => setSide('SELL')}
-            className={`pill-tab ${side === 'SELL' ? 'active text-black' : ''}`}
+            className={`pill-tab ${side === 'SELL' ? 'active text-[var(--background)] bg-[var(--foreground)]' : 'text-muted hover:text-[var(--foreground)]'}`}
         >
             SELL
         </div>
       </div>
 
       {/* 2. Order Type Tabs */}
-      <div className="flex space-x-6 border-b border-gray-100 pb-1">
+      <div className="flex space-x-6 border-b border-[var(--border)] pb-1">
         {['Limit', 'Market', 'Stop Market'].map((type) => {
             const isActive = (type === 'Limit' && orderType === 'LIMIT') || 
                              (type === 'Market' && orderType === 'MARKET') ||
@@ -85,8 +85,8 @@ function OrderFormComponent({ symbol, onOrderPlaced }: OrderFormProps) {
                   onClick={() => setOrderType(type === 'Limit' ? 'LIMIT' : type === 'Market' ? 'MARKET' : 'STOP_MARKET')}
                   className={`pb-2 text-xs font-semibold transition-all border-b-2 ${
                     isActive 
-                      ? 'border-[#8b5cf6] text-gray-900' 
-                      : 'border-transparent text-gray-400 hover:text-gray-600'
+                      ? 'border-[#8b5cf6] text-[var(--foreground)]' 
+                      : 'border-transparent text-muted hover:text-[var(--foreground)]'
                   }`}
                 >
                   {type}
@@ -100,15 +100,15 @@ function OrderFormComponent({ symbol, onOrderPlaced }: OrderFormProps) {
         {/* Limit Price Input */}
         {orderType !== 'MARKET' && (
             <div className="space-y-2">
-                <label className="text-[11px] font-semibold text-gray-500">Limit price</label>
-                <div className="input-group">
+                <label className="text-[11px] font-semibold text-muted">Limit price</label>
+                <div className="input-group bg-[var(--background)] border border-[var(--border)] rounded-lg">
                     <input 
                         type="text" 
                         value={price}
                         onChange={(e) => setPrice(e.target.value)}
-                        className="input-ghost"
+                        className="input-ghost text-[var(--foreground)] bg-transparent"
                     />
-                    <span className="text-xs font-bold text-gray-400">USDT</span>
+                    <span className="text-xs font-bold text-muted">USDT</span>
                 </div>
             </div>
         )}
@@ -116,29 +116,29 @@ function OrderFormComponent({ symbol, onOrderPlaced }: OrderFormProps) {
         {/* Quantity and Total Row */}
         <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-                <label className="text-[11px] font-semibold text-gray-500">Quantity</label>
-                <div className="input-group">
+                <label className="text-[11px] font-semibold text-muted">Quantity</label>
+                <div className="input-group bg-[var(--background)] border border-[var(--border)] rounded-lg">
                     <input 
                         type="text" 
                         placeholder="0.0001"
                         value={quantity}
                         onChange={(e) => setQuantity(e.target.value)}
-                        className="input-ghost"
+                        className="input-ghost text-[var(--foreground)] bg-transparent"
                     />
-                    <span className="text-xs font-bold text-gray-400">BTC</span>
+                    <span className="text-xs font-bold text-muted">BTC</span>
                 </div>
             </div>
             <div className="space-y-2">
-                <label className="text-[11px] font-semibold text-gray-500">Total</label>
-                <div className="input-group bg-gray-50/50">
-                    <div className="flex items-center text-gray-400 text-sm mr-1">≈</div>
+                <label className="text-[11px] font-semibold text-muted">Total</label>
+                <div className="input-group bg-[var(--surface-hover)] border border-[var(--border)] rounded-lg">
+                    <div className="flex items-center text-muted text-sm mr-1">≈</div>
                     <input 
                         type="text" 
                         readOnly
                         value={price && quantity ? (parseFloat(price.replace(/,/g,'')) * parseFloat(quantity)).toFixed(2) : ''}
-                        className="input-ghost text-gray-500"
+                        className="input-ghost text-muted bg-transparent"
                     />
-                    <span className="text-xs font-bold text-gray-400">USDT</span>
+                    <span className="text-xs font-bold text-muted">USDT</span>
                 </div>
             </div>
         </div>
@@ -155,17 +155,17 @@ function OrderFormComponent({ symbol, onOrderPlaced }: OrderFormProps) {
                 className="w-full"
             />
             <div className="flex justify-end">
-                <span className="text-xs font-bold text-gray-900">{range}%</span>
+                <span className="text-xs font-bold text-[var(--foreground)]">{range}%</span>
             </div>
         </div>
 
         {/* Balance & Add Funds */}
         <div className="flex items-center justify-between pt-2">
             <div className="flex items-center space-x-3">
-                <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                 </svg>
-                <span className="text-sm font-bold text-gray-900">30.16 USD</span>
+                <span className="text-sm font-bold text-[var(--foreground)]">30.16 USD</span>
             </div>
             <button type="button" className="bg-[#f3e8ff] hover:bg-[#ebdcfc] text-[#7e22ce] text-[10px] font-bold px-3 py-1.5 rounded-full transition-colors uppercase tracking-wide">
                 Add funds
@@ -182,13 +182,13 @@ function OrderFormComponent({ symbol, onOrderPlaced }: OrderFormProps) {
         )}
 
         {/* Divider */}
-        <div className="h-px bg-gray-100 w-full my-2"></div>
+        <div className="h-px bg-[var(--border)] w-full my-2"></div>
 
         {/* Main Action Button */}
         <button
           type="submit"
           disabled={isSubmitting}
-          className="btn-black shadow-xl shadow-gray-200"
+          className="btn-black shadow-xl shadow-[var(--shadow)]"
         >
           {isSubmitting ? (
               <span className="opacity-80">Processing...</span>

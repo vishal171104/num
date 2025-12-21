@@ -1,0 +1,11 @@
+node_modules
+apps/*/node_modules
+packages/*/node_modules
+*.log
+.DS_Store
+.git
+.env
+packages/database/dev.db
+packages/database/dev.db-journal
+apps/frontend/.next
+apps/*/dist

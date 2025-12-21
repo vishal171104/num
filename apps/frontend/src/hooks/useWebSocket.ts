@@ -25,7 +25,24 @@ export function useWebSocket(token: string | null) {
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+    const cleanup = useCallback(() => {
+        if (reconnectTimeoutRef.current) {
+            clearTimeout(reconnectTimeoutRef.current);
+            reconnectTimeoutRef.current = null;
+        }
+        if (wsRef.current) {
+            // Remove listener to prevent auto-reconnect on manual close
+            wsRef.current.onclose = null;
+            wsRef.current.close();
+            wsRef.current = null;
+        }
+        setIsConnected(false);
+    }, []);
+
     const connect = useCallback(() => {
+        // Clear any existing connection first
+        cleanup();
+
         if (!token) return;
 
         try {
@@ -56,6 +73,7 @@ export function useWebSocket(token: string | null) {
             ws.onclose = () => {
                 console.log('❌ WebSocket disconnected');
                 setIsConnected(false);
+                wsRef.current = null;
 
                 // Attempt to reconnect after 3 seconds
                 reconnectTimeoutRef.current = setTimeout(() => {
@@ -68,20 +86,15 @@ export function useWebSocket(token: string | null) {
         } catch (error) {
             console.error('Error creating WebSocket:', error);
         }
-    }, [token]);
+    }, [token, cleanup]);
 
     useEffect(() => {
         connect();
 
         return () => {
-            if (reconnectTimeoutRef.current) {
-                clearTimeout(reconnectTimeoutRef.current);
-            }
-            if (wsRef.current) {
-                wsRef.current.close();
-            }
+            cleanup();
         };
-    }, [connect]);
+    }, [connect, cleanup]);
 
     return { isConnected, lastMessage };
 }

@@ -151,11 +151,11 @@ export default function TradePage() {
         
         {/* Left Sidebar - High Padding */}
         <aside className="col-span-12 lg:col-span-4 space-y-10">
-          <div className="card space-y-8 p-8 border-none shadow-none bg-white lg:bg-transparent lg:shadow-none lg:border-none lg:p-0">
+          <div className="card space-y-8 p-8 border-none shadow-none bg-transparent lg:shadow-none lg:border-none lg:p-0">
              {/* Mobile-only card container, or clear on desktop if matching image perfectly which has it in a sidebar container */}
-             <div className="bg-white rounded-[24px] p-8 border border-gray-100 shadow-sm">
-                <div>
-                   <h2 className="text-xl font-bold mb-6 text-gray-900">Portfolio</h2>
+              <div className="bg-[var(--surface)] rounded-[24px] p-8 border border-[var(--border)] shadow-sm">
+                 <div>
+                    <h2 className="text-xl font-bold mb-6 text-[var(--foreground)]">Portfolio</h2>
                    
                    {/* Asset Selector */}
                    <div className="mb-8">
@@ -181,23 +181,23 @@ export default function TradePage() {
              </div>
 
              {/* Account Details - Matching bottom left of image */}
-             <div className="bg-white rounded-[24px] p-8 border border-gray-100 shadow-sm space-y-6">
-                 <h3 className="font-bold text-gray-900">Account</h3>
+             <div className="bg-[var(--surface)] rounded-[24px] p-8 border border-[var(--border)] shadow-sm space-y-6">
+                 <h3 className="font-bold text-[var(--foreground)]">Account</h3>
                  
                  <div className="space-y-4">
                     <div className="flex justify-between items-center text-sm">
-                        <span className="font-semibold text-gray-400">Margin Ratio</span>
-                        <span className="font-bold text-gray-900">0.00%</span>
+                        <span className="font-semibold text-muted">Margin Ratio</span>
+                        <span className="font-bold text-[var(--foreground)]">0.00%</span>
                     </div>
-                    <div className="h-px bg-gray-50"></div>
+                    <div className="h-px bg-[var(--border)]"></div>
                      <div className="flex justify-between items-center text-sm">
-                        <span className="font-semibold text-gray-400">Maintenance Margin</span>
-                        <span className="font-bold text-gray-900">0.000000 USDT</span>
+                        <span className="font-semibold text-muted">Maintenance Margin</span>
+                        <span className="font-bold text-[var(--foreground)]">0.000000 USDT</span>
                     </div>
-                    <div className="h-px bg-gray-50"></div>
+                    <div className="h-px bg-[var(--border)]"></div>
                      <div className="flex justify-between items-center text-sm">
-                        <span className="font-semibold text-gray-400">Margin Balance</span>
-                        <span className="font-bold text-gray-900">0.000000 USDT</span>
+                        <span className="font-semibold text-muted">Margin Balance</span>
+                        <span className="font-bold text-[var(--foreground)]">0.000000 USDT</span>
                     </div>
                  </div>
              </div>

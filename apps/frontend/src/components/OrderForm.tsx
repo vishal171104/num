@@ -193,7 +193,7 @@ function OrderFormComponent({ symbol, onOrderPlaced }: OrderFormProps) {
           {isSubmitting ? (
               <span className="opacity-80">Processing...</span>
           ) : (
-             `Buy ${symbol.split('USDT')[0] || 'BTC'}/USD`
+             `${side === 'BUY' ? 'Buy' : 'Sell'} ${symbol.split('USDT')[0] || 'BTC'}/USD`
           )}
         </button>
 

@@ -16,6 +16,22 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
+// Handle 401 errors globally
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            // Token is invalid/expired
+            localStorage.removeItem('token');
+            // Only redirect if not already on the login page to avoid loops
+            if (!window.location.pathname.startsWith('/auth')) {
+                window.location.reload();
+            }
+        }
+        return Promise.reject(error);
+    }
+);
+
 export interface RegisterData {
     email: string;
     password: string;

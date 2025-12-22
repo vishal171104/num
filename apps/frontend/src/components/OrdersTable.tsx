@@ -9,7 +9,7 @@ interface OrdersTableProps {
 }
 
 function OrdersTableComponent({ refreshTrigger, lastUpdate }: OrdersTableProps) {
-  const [activeTab, setActiveTab] = useState<'POSITIONS' | 'ORDERS' | 'TRADES'>('POSITIONS');
+  const [activeTab, setActiveTab] = useState<'POSITIONS' | 'ORDERS' | 'TRADES'>('ORDERS');
   const [orders, setOrders] = useState<Order[]>([]);
   const [positions, setPositions] = useState<Position[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,125 +35,192 @@ function OrdersTableComponent({ refreshTrigger, lastUpdate }: OrdersTableProps) 
 
   return (
     <div className="flex flex-col h-full bg-[var(--surface)]">
-      {/* Spacious Table Header */}
-      <div className="px-10 border-b border-[var(--border)] flex items-center justify-between h-20 shrink-0">
-        <div className="flex space-x-12 h-full">
-          {['Positions', 'Orders', 'Trades'].map((tab) => (
+      {/* Tab Header */}
+      <div className="h-11 px-4 border-b border-[var(--border)] flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-1">
+          {[
+            { key: 'POSITIONS', label: 'Positions', count: positions.length },
+            { key: 'ORDERS', label: 'Open Orders', count: orders.filter(o => o.status === 'PENDING').length },
+            { key: 'TRADES', label: 'Trade History', count: orders.length }
+          ].map((tab) => (
             <button
-              key={tab}
-              onClick={() => setActiveTab(tab.toUpperCase() as any)}
-              className={`btn-tab active:outline-none h-full flex items-center px-0 text-sm ${
-                activeTab === tab.toUpperCase() ? 'active' : ''
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key as any)}
+              className={`px-3 py-2 text-xs font-medium rounded transition-colors flex items-center gap-1.5 ${
+                activeTab === tab.key
+                  ? 'bg-[var(--surface-hover)] text-[var(--foreground)]'
+                  : 'text-[var(--text-muted)] hover:text-[var(--foreground)]'
               }`}
             >
-              <span className="font-bold uppercase tracking-[0.2em]">{tab}</span>
+              {tab.label}
+              {tab.count > 0 && (
+                <span className={`px-1.5 py-0.5 text-[10px] rounded ${
+                  activeTab === tab.key
+                    ? 'bg-[var(--accent)] text-[var(--accent-foreground)]'
+                    : 'bg-[var(--surface-active)] text-[var(--text-muted)]'
+                }`}>
+                  {tab.count}
+                </span>
+              )}
             </button>
           ))}
         </div>
         
-        <div className="relative">
-          <input 
-            type="text" 
-            placeholder="Search symbols..." 
-            className="input-field !h-11 !w-64 !text-xs !pl-12 !bg-[var(--surface-hover)]"
-          />
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted opacity-40">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-          </div>
+        {/* Actions */}
+        <div className="flex items-center gap-2">
+          <button className="text-xs text-[var(--text-muted)] hover:text-[var(--foreground)] transition-colors">
+            Cancel All
+          </button>
         </div>
       </div>
 
+      {/* Table Content */}
       <div className="flex-1 overflow-auto">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center h-[400px] space-y-6">
-            <div className="w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-[10px] font-bold text-muted uppercase tracking-[0.3em]">Processing Ledger</span>
+          <div className="flex items-center justify-center h-full">
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-6 h-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
+              <span className="text-xs text-[var(--text-muted)]">Loading...</span>
+            </div>
           </div>
         ) : (
-          <table className="w-full text-left">
-            <thead className="sticky top-0 bg-[var(--surface)] z-10 border-b border-[var(--border)]">
-              <tr className="text-[10px] text-muted uppercase tracking-[0.2em]">
+          <table className="w-full">
+            <thead className="sticky top-0 bg-[var(--surface)] z-10">
+              <tr className="text-xs text-[var(--text-muted)]">
                 {activeTab === 'POSITIONS' ? (
                   <>
-                    <th className="px-10 py-6 font-bold">Transaction</th>
-                    <th className="px-10 py-6 font-bold">Size</th>
-                    <th className="px-10 py-6 font-bold">Entry price</th>
-                    <th className="px-10 py-6 font-bold">Realized PnL</th>
-                    <th className="px-10 py-6 font-bold">Unrealized PnL</th>
-                    <th className="w-10"></th>
+                    <th className="px-4 py-3 text-left font-medium">Symbol</th>
+                    <th className="px-4 py-3 text-right font-medium">Size</th>
+                    <th className="px-4 py-3 text-right font-medium">Entry Price</th>
+                    <th className="px-4 py-3 text-right font-medium">Mark Price</th>
+                    <th className="px-4 py-3 text-right font-medium">PNL (ROE%)</th>
+                    <th className="px-4 py-3 text-right font-medium">Actions</th>
                   </>
                 ) : (
                   <>
-                    <th className="px-10 py-6 font-bold">Symbol</th>
-                    <th className="px-10 py-6 font-bold">Side</th>
-                    <th className="px-10 py-6 font-bold">Type</th>
-                    <th className="px-10 py-6 font-bold">Quantity</th>
-                    <th className="px-10 py-6 font-bold">Price</th>
-                    <th className="px-10 py-6 font-bold">Status</th>
-                    <th className="px-10 py-6 font-bold">Created At</th>
+                    <th className="px-4 py-3 text-left font-medium">Time</th>
+                    <th className="px-4 py-3 text-left font-medium">Symbol</th>
+                    <th className="px-4 py-3 text-center font-medium">Side</th>
+                    <th className="px-4 py-3 text-left font-medium">Type</th>
+                    <th className="px-4 py-3 text-right font-medium">Price</th>
+                    <th className="px-4 py-3 text-right font-medium">Amount</th>
+                    <th className="px-4 py-3 text-center font-medium">Status</th>
+                    <th className="px-4 py-3 text-right font-medium">Actions</th>
                   </>
                 )}
               </tr>
             </thead>
-            <tbody className="divide-y divide-[var(--border)]/30">
+            <tbody className="divide-y divide-[var(--border-light)]">
               {activeTab === 'POSITIONS' ? (
-                positions.map((pos, idx) => (
-                  <tr key={pos.symbol + idx} className="hover:bg-[var(--surface-hover)] transition-all group">
-                    <td className="px-10 py-8">
-                      <div className="flex items-center space-x-4">
-                         <div className={`p-2 rounded-xl transition-all ${pos.quantity >= 0 ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
-                           <svg className={`w-4 h-4 ${pos.quantity >= 0 ? 'text-green-500' : 'text-red-500 rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
-                         </div>
-                         <span className="font-bold text-sm tracking-tight">{pos.symbol}</span>
+                positions.length > 0 ? (
+                  positions.map((pos, idx) => (
+                    <tr key={pos.symbol + idx} className="hover:bg-[var(--surface-hover)] transition-colors">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <span className={`w-1.5 h-1.5 rounded-full ${pos.quantity >= 0 ? 'bg-[var(--green)]' : 'bg-[var(--red)]'}`} />
+                          <span className="text-sm font-medium text-[var(--foreground)]">{pos.symbol}</span>
+                          <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
+                            pos.quantity >= 0 
+                              ? 'bg-[var(--green-light)] text-[var(--green)]'
+                              : 'bg-[var(--red-light)] text-[var(--red)]'
+                          }`}>
+                            {pos.quantity >= 0 ? 'LONG' : 'SHORT'}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-[var(--foreground)]">
+                        {Math.abs(pos.quantity).toFixed(4)}
+                      </td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-[var(--text-muted)]">
+                        {pos.avgPrice.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-[var(--foreground)]">
+                        {pos.avgPrice.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span className="font-mono text-sm text-[var(--green)]">+$0.00</span>
+                        <span className="text-[10px] text-[var(--green)] ml-1">(+0.00%)</span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <button className="text-xs text-[var(--text-muted)] hover:text-[var(--red)] transition-colors">
+                          Close
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="text-center py-12">
+                      <div className="flex flex-col items-center gap-2 text-[var(--text-muted)]">
+                        <svg className="w-10 h-10 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                        <span className="text-xs">No open positions</span>
                       </div>
                     </td>
-                    <td className="px-10 py-8 font-mono text-sm">{pos.quantity.toFixed(4)}</td>
-                    <td className="px-10 py-8 font-mono text-sm text-muted">${pos.avgPrice.toLocaleString()}</td>
-                    <td className="px-10 py-8 font-mono text-sm font-bold text-success">+$0.00</td>
-                    <td className="px-10 py-8 font-mono text-sm font-bold text-danger">-$2.40</td>
-                    <td className="px-10 py-8">
-                      <button className="p-2 hover:bg-[var(--background)] rounded-xl transition-all text-muted opacity-0 group-hover:opacity-100">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                      </button>
-                    </td>
                   </tr>
-                ))
+                )
               ) : (
-                orders.map((order) => (
-                  <tr key={order.id} className="hover:bg-[var(--surface-hover)] transition-all">
-                    <td className="px-10 py-8 font-bold text-sm">{order.symbol}</td>
-                    <td className="px-10 py-8">
-                      <span className={`text-[10px] font-black px-3 py-1.5 rounded-lg border uppercase tracking-widest ${order.side === 'BUY' ? 'bg-green-500/10 text-green-600 border-green-500/20' : 'bg-red-500/10 text-red-600 border-red-500/20'}`}>
-                        {order.side}
-                      </span>
-                    </td>
-                    <td className="px-10 py-8 text-xs font-medium text-muted">{order.type}</td>
-                    <td className="px-10 py-8 font-mono text-sm">{order.quantity}</td>
-                    <td className="px-10 py-8 font-mono text-sm">{order.price || 'Market'}</td>
-                    <td className="px-10 py-8">
-                      <span className={`text-[10px] font-black px-4 py-2 rounded-full shadow-sm ${
-                        order.status === 'FILLED' ? 'bg-green-500 text-white' : 
-                        order.status === 'PENDING' ? 'bg-yellow-500 text-white animate-pulse' : 'bg-red-500 text-white'
-                      }`}>
-                        {order.status}
-                      </span>
-                    </td>
-                    <td className="px-10 py-8 text-muted text-xs font-medium">
-                      {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      <span className="block text-[10px] opacity-40 uppercase font-black mt-1">{new Date(order.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>
+                (activeTab === 'ORDERS' ? orders.filter(o => o.status === 'PENDING') : orders).length > 0 ? (
+                  (activeTab === 'ORDERS' ? orders.filter(o => o.status === 'PENDING') : orders).map((order) => (
+                    <tr key={order.id} className="hover:bg-[var(--surface-hover)] transition-colors">
+                      <td className="px-4 py-3 text-xs text-[var(--text-muted)]">
+                        {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-sm font-medium text-[var(--foreground)]">{order.symbol}</span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className={`text-xs font-semibold ${
+                          order.side === 'BUY' ? 'text-[var(--green)]' : 'text-[var(--red)]'
+                        }`}>
+                          {order.side}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-[var(--text-muted)]">
+                        {order.type}
+                      </td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-[var(--foreground)]">
+                        {order.price || 'Market'}
+                      </td>
+                      <td className="px-4 py-3 text-right font-mono text-sm text-[var(--foreground)]">
+                        {order.quantity}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded ${
+                          order.status === 'FILLED' 
+                            ? 'bg-[var(--green-light)] text-[var(--green)]'
+                            : order.status === 'PENDING'
+                            ? 'bg-[rgba(240,185,11,0.15)] text-[var(--accent)]'
+                            : 'bg-[var(--red-light)] text-[var(--red)]'
+                        }`}>
+                          {order.status === 'PENDING' && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
+                          )}
+                          {order.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {order.status === 'PENDING' && (
+                          <button className="text-xs text-[var(--text-muted)] hover:text-[var(--red)] transition-colors">
+                            Cancel
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={8} className="text-center py-12">
+                      <div className="flex flex-col items-center gap-2 text-[var(--text-muted)]">
+                        <svg className="w-10 h-10 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        <span className="text-xs">{activeTab === 'ORDERS' ? 'No open orders' : 'No trade history'}</span>
+                      </div>
                     </td>
                   </tr>
-                ))
-              )}
-              {!isLoading && (activeTab === 'POSITIONS' ? positions.length === 0 : orders.length === 0) && (
-                <tr>
-                  <td colSpan={7} className="text-center py-32">
-                    <div className="flex flex-col items-center space-y-4 opacity-20">
-                      <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
-                      <span className="text-xs font-bold uppercase tracking-[0.4em]">Empty Partition</span>
-                    </div>
-                  </td>
-                </tr>
+                )
               )}
             </tbody>
           </table>

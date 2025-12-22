@@ -9,6 +9,9 @@ export default function Home() {
   const { user, isLoading } = useAuth();
 
   useEffect(() => {
+    // Set dark theme
+    document.documentElement.setAttribute('data-theme', 'dark');
+    
     if (!isLoading) {
       if (user) {
         router.push('/trade');
@@ -21,12 +24,17 @@ export default function Home() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
       <div className="text-center">
-        <div className="animate-pulse-slow">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
-            Numatix Trading
-          </h1>
+        <div className="flex items-center justify-center gap-3 mb-4">
+          <div className="w-12 h-12 bg-[var(--accent)] rounded-xl flex items-center justify-center animate-pulse">
+            <span className="text-[var(--accent-foreground)] font-black text-2xl">N</span>
+          </div>
         </div>
-        <p className="text-[var(--foreground-muted)] mt-4">Loading...</p>
+        <h1 className="text-2xl font-bold text-[var(--foreground)]">Numatix</h1>
+        <div className="flex items-center justify-center gap-2 mt-4">
+          <div className="w-2 h-2 bg-[var(--accent)] rounded-full animate-bounce [animation-delay:-0.3s]" />
+          <div className="w-2 h-2 bg-[var(--accent)] rounded-full animate-bounce [animation-delay:-0.15s]" />
+          <div className="w-2 h-2 bg-[var(--accent)] rounded-full animate-bounce" />
+        </div>
       </div>
     </div>
   );

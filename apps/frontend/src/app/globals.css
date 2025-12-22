@@ -1,40 +1,87 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
+/* ============================================
+   BINANCE-STYLE TRADING PLATFORM DESIGN SYSTEM
+   ============================================ */
+
 :root {
-  /* Light Theme - Clean & Spacious */
-  --background: #f8fafc;
+  /* Light Theme - Clean Professional */
+  --background: #fafafa;
+  --background-secondary: #f5f5f5;
   --surface: #ffffff;
-  --surface-hover: #f1f5f9;
-  --border: #e2e8f0;
-  --border-active: #cbd5e1;
-  --foreground: #0f172a;
-  --foreground-muted: #64748b;
-  --accent: #1e293b;
-  --accent-foreground: #ffffff;
-  --green: #10b981;
-  --red: #ef4444;
-  --yellow: #f59e0b;
-  --card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --surface-hover: #f5f5f5;
+  --surface-active: #eeeeee;
+  --border: #e0e0e0;
+  --border-light: #f0f0f0;
+
+  --foreground: #1e2329;
+  --foreground-secondary: #474d57;
+  --text-muted: #848e9c;
+  --text-tertiary: #b7bdc6;
+
+  /* Binance Brand Colors */
+  --accent: #f0b90b;
+  --accent-hover: #d9a60a;
+  --accent-foreground: #1e2329;
+
+  /* Trading Colors */
+  --green: #0ecb81;
+  --green-light: rgba(14, 203, 129, 0.1);
+  --green-hover: #0bb574;
+  --red: #f6465d;
+  --red-light: rgba(246, 70, 93, 0.1);
+  --red-hover: #e03e54;
+
+  /* Utility */
+  --yellow: #f0b90b;
+  --blue: #1e88e5;
+  --purple: #8b5cf6;
+
+  --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   --header-bg: #ffffff;
+  --header-border: #e0e0e0;
+
+  /* Monospace for numbers */
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Monaco', monospace;
 }
 
 [data-theme="dark"] {
-  --background: #0f172a;
-  --surface: #1e293b;
-  --surface-hover: #334155;
-  --border: #334155;
-  --border-active: #475569;
-  --foreground: #f1f5f9;
-  --foreground-muted: #94a3b8;
-  --accent: #38bdf8;
-  --accent-foreground: #0f172a;
-  --green: #22c55e;
-  --red: #ef4444;
-  --yellow: #f59e0b;
-  --card-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --header-bg: #1e293b;
+  /* Deep Dark Background - Binance Style */
+  --background: #0b0e11;
+  --background-secondary: #12161c;
+  --surface: #1e2329;
+  --surface-hover: #2b3139;
+  --surface-active: #363c46;
+  --border: #2b3139;
+  --border-light: #1e2329;
+
+  --foreground: #eaecef;
+  --foreground-secondary: #b7bdc6;
+  --text-muted: #848e9c;
+  --text-tertiary: #5e6673;
+
+  /* Accent stays gold */
+  --accent: #f0b90b;
+  --accent-hover: #f8d12f;
+  --accent-foreground: #1e2329;
+
+  /* Trading Colors - Brighter in dark mode */
+  --green: #0ecb81;
+  --green-light: rgba(14, 203, 129, 0.15);
+  --green-hover: #2ed191;
+  --red: #f6465d;
+  --red-light: rgba(246, 70, 93, 0.15);
+  --red-hover: #f86a7d;
+
+  --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --header-bg: #1e2329;
+  --header-border: #2b3139;
 }
+
+/* ============================================
+   BASE RESET & TYPOGRAPHY
+   ============================================ */
 
 * {
   box-sizing: border-box;
@@ -45,112 +92,29 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  font-size: 15px;
-  /* Increased for better readability */
-  line-height: 1.6;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Spacious Container */
-.container-spacious {
-  max-width: 1600px;
-  margin: 0 auto;
-  padding: 2rem;
-}
-
-/* Card - Softer and More Spaced */
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  /* Rounder corners */
-  box-shadow: var(--card-shadow);
-  padding: 1.5rem;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-/* Input - More padding and height */
-.input-field {
-  background: var(--background);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px 16px;
-  color: var(--foreground);
-  font-family: 'Inter', sans-serif;
-  width: 100%;
-  height: 52px;
-  transition: all 0.2s ease;
-}
-
-.input-field:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.1);
-}
-
-/* Buttons - More substantial */
-.btn-primary {
-  background: var(--accent);
-  color: var(--accent-foreground);
-  font-weight: 600;
-  padding: 14px 24px;
-  border-radius: 12px;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  letter-spacing: 0.025em;
-}
-
-.btn-primary:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
-
-.btn-tab {
-  padding: 12px 24px;
-  font-weight: 500;
-  color: var(--foreground-muted);
-  border-bottom: 3px solid transparent;
-  transition: all 0.2s ease;
-}
-
-.btn-tab.active {
-  color: var(--foreground);
-  border-bottom-color: var(--accent);
-}
-
-/* Professional Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--border-active);
-  border-radius: 20px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--foreground-muted);
-}
-
-/* Typography */
+/* Typography Hierarchy */
 h1,
 h2,
 h3,
-h4 {
+h4,
+h5,
+h6 {
   color: var(--foreground);
-  font-weight: 700;
-  letter-spacing: -0.025em;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.text-mono {
+  font-family: var(--font-mono);
+  font-feature-settings: 'tnum' on, 'lnum' on;
 }
 
 .text-success {
@@ -161,11 +125,486 @@ h4 {
   color: var(--red);
 }
 
-/* Animation */
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-accent {
+  color: var(--accent);
+}
+
+/* ============================================
+   LAYOUT COMPONENTS
+   ============================================ */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+}
+
+.card-flat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+/* ============================================
+   FORM ELEMENTS - Binance Style
+   ============================================ */
+
+.input-field {
+  background: var(--background-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: var(--foreground);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  width: 100%;
+  height: 48px;
+  transition: all 0.15s ease;
+}
+
+.input-field:hover {
+  border-color: var(--text-muted);
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--surface);
+}
+
+.input-field::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* Input Group - Combined input with suffix */
+.input-group {
+  background: var(--background-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0 12px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+}
+
+.input-group:hover {
+  border-color: var(--text-muted);
+}
+
+.input-group:focus-within {
+  border-color: var(--accent);
+  background: var(--surface);
+}
+
+.input-ghost {
+  border: none;
+  outline: none;
+  background: transparent;
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.input-ghost::placeholder {
+  color: var(--text-tertiary);
+}
+
+.input-suffix {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ============================================
+   BUTTONS - Trading Platform Style
+   ============================================ */
+
+/* Primary Action (Gold/Accent) */
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-foreground);
+  font-weight: 600;
+  font-size: 14px;
+  padding: 12px 24px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Buy Button - Green */
+.btn-buy {
+  background: var(--green);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 14px 24px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.btn-buy:hover {
+  background: var(--green-hover);
+  box-shadow: 0 4px 12px rgba(14, 203, 129, 0.3);
+}
+
+.btn-buy:active {
+  transform: scale(0.98);
+}
+
+.btn-buy:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Sell Button - Red */
+.btn-sell {
+  background: var(--red);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 14px 24px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.btn-sell:hover {
+  background: var(--red-hover);
+  box-shadow: 0 4px 12px rgba(246, 70, 93, 0.3);
+}
+
+.btn-sell:active {
+  transform: scale(0.98);
+}
+
+.btn-sell:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Secondary/Ghost Button */
+.btn-secondary {
+  background: transparent;
+  color: var(--foreground);
+  font-weight: 500;
+  font-size: 14px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-secondary:hover {
+  background: var(--surface-hover);
+  border-color: var(--text-muted);
+}
+
+/* Tab Buttons */
+.btn-tab {
+  padding: 12px 16px;
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-tab:hover {
+  color: var(--foreground);
+}
+
+.btn-tab.active {
+  color: var(--foreground);
+  border-bottom-color: var(--accent);
+}
+
+/* ============================================
+   BUY/SELL TOGGLE - Binance Style
+   ============================================ */
+
+.trade-toggle-container {
+  display: flex;
+  background: var(--background-secondary);
+  border-radius: 8px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.trade-toggle-btn {
+  flex: 1;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.trade-toggle-btn:hover {
+  color: var(--foreground);
+}
+
+.trade-toggle-btn.active-buy {
+  background: var(--green);
+  color: #ffffff;
+}
+
+.trade-toggle-btn.active-sell {
+  background: var(--red);
+  color: #ffffff;
+}
+
+/* Legacy pill toggle support */
+.pill-toggle-container {
+  display: flex;
+  background: var(--background-secondary);
+  border-radius: 8px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.pill-tab {
+  flex: 1;
+  text-align: center;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  color: var(--text-muted);
+  background: transparent;
+}
+
+.pill-tab:hover {
+  color: var(--foreground);
+}
+
+.pill-tab.active {
+  background: var(--surface);
+  color: var(--foreground);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================
+   RANGE SLIDER - Trading Style (Enhanced)
+   ============================================ */
+
+input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 10px;
+  background: var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+}
+
+input[type=range]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 10px;
+  background: transparent;
+  border-radius: 6px;
+}
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 24px;
+  width: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 3px solid var(--surface);
+  margin-top: -7px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25), 0 0 0 2px var(--accent);
+  cursor: grab;
+  transition: all 0.15s ease;
+}
+
+input[type=range]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 0 3px var(--accent);
+}
+
+input[type=range]::-webkit-slider-thumb:active {
+  cursor: grabbing;
+  transform: scale(1.05);
+}
+
+input[type=range]:focus {
+  outline: none;
+}
+
+/* Enhanced slider variant */
+.slider-enhanced {
+  height: 12px !important;
+  border-radius: 8px !important;
+}
+
+.slider-enhanced::-webkit-slider-thumb {
+  height: 28px !important;
+  width: 28px !important;
+  margin-top: -8px !important;
+}
+
+/* ============================================
+   SCROLLBAR - Minimal Style
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* ============================================
+   STATUS BADGES
+   ============================================ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.badge-success {
+  background: var(--green-light);
+  color: var(--green);
+}
+
+.badge-danger {
+  background: var(--red-light);
+  color: var(--red);
+}
+
+.badge-warning {
+  background: rgba(240, 185, 11, 0.15);
+  color: var(--accent);
+}
+
+.badge-neutral {
+  background: var(--surface-hover);
+  color: var(--text-muted);
+}
+
+/* ============================================
+   TABLES - Data Dense Style
+   ============================================ */
+
+.table-trading {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-trading th {
+  padding: 12px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.table-trading td {
+  padding: 12px 16px;
+  font-size: 13px;
+  color: var(--foreground);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.table-trading tr:hover {
+  background: var(--surface-hover);
+}
+
+.table-trading .mono {
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(8px);
   }
 
   to {
@@ -174,133 +613,112 @@ h4 {
   }
 }
 
-/* Custom Range Slider */
-input[type=range] {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100%;
-  background: transparent;
-  height: 6px;
-  border-radius: 5px;
-  cursor: pointer;
+@keyframes pulse-green {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(14, 203, 129, 0.4);
+  }
+
+  50% {
+    box-shadow: 0 0 0 4px rgba(14, 203, 129, 0);
+  }
 }
 
-input[type=range]::-webkit-slider-runnable-track {
-  width: 100%;
-  height: 6px;
-  background: #e2e8f0;
-  border-radius: 5px;
-  border: none;
-}
+@keyframes pulse-red {
 
-input[type=range]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  height: 18px;
-  width: 18px;
-  border-radius: 50%;
-  background: #fff;
-  border: 4px solid #8b5cf6;
-  /* Purple border */
-  margin-top: -6px;
-  /* Center thumb */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: transform 0.1s ease;
-}
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(246, 70, 93, 0.4);
+  }
 
-input[type=range]::-webkit-slider-thumb:hover {
-  transform: scale(1.1);
-}
-
-input[type=range]:focus {
-  outline: none;
-}
-
-/* Filled part of the slider (will be handled dynamically in JS via background-size/image, or CSS var) */
-
-/* Updated Accents */
-:root {
-  --purple-primary: #8b5cf6;
-  --purple-soft: #ede9fe;
-  --text-dark: #1e293b;
-  --text-gray: #64748b;
-}
-
-/* Pill Toggle */
-.pill-toggle-container {
-  background: #f1f5f9;
-  border-radius: 9999px;
-  /* Pill shape */
-  padding: 4px;
-  display: flex;
-  position: relative;
-}
-
-.pill-tab {
-  flex: 1;
-  text-align: center;
-  padding: 8px 0;
-  font-size: 13px;
-  font-weight: 600;
-  border-radius: 9999px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: var(--text-gray);
-  z-index: 1;
-}
-
-.pill-tab.active {
-  background: #fff;
-  color: var(--text-dark);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-/* Smooth Input */
-.input-group {
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 8px 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: border-color 0.2s;
-}
-
-.input-group:focus-within {
-  border-color: var(--purple-primary);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-}
-
-.input-ghost {
-  border: none;
-  outline: none;
-  width: 100%;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-dark);
-}
-
-/* Big Black Button */
-.btn-black {
-  background: #1a1a1a;
-  color: #fff;
-  border-radius: 9999px;
-  padding: 16px;
-  font-weight: 600;
-  font-size: 14px;
-  width: 100%;
-  transition: transform 0.1s, background-color 0.2s;
-}
-
-.btn-black:hover {
-  background: #000;
-  transform: translateY(-1px);
-}
-
-.btn-black:active {
-  transform: translateY(0);
+  50% {
+    box-shadow: 0 0 0 4px rgba(246, 70, 93, 0);
+  }
 }
 
 .fade-in {
-  animation: fadeIn 0.4s ease-out;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.pulse-success {
+  animation: pulse-green 2s infinite;
+}
+
+.pulse-danger {
+  animation: pulse-red 2s infinite;
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.container-trading {
+  max-width: 1920px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.border-separator {
+  border-color: var(--border);
+}
+
+.bg-up {
+  background: var(--green-light);
+}
+
+.bg-down {
+  background: var(--red-light);
+}
+
+/* Price display */
+.price-display {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-feature-settings: 'tnum' on, 'lnum' on;
+}
+
+.price-up {
+  color: var(--green);
+}
+
+.price-down {
+  color: var(--red);
+}
+
+/* Connection indicator */
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status-dot.online {
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+}
+
+.status-dot.offline {
+  background: var(--red);
+}
+
+/* Legacy support for btn-black */
+.btn-black {
+  background: var(--foreground);
+  color: var(--background);
+  font-weight: 600;
+  font-size: 14px;
+  padding: 14px 24px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.btn-black:hover {
+  opacity: 0.9;
 }

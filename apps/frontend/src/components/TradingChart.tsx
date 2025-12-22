@@ -34,13 +34,14 @@ function TradingChartComponent({ symbol, interval }: TradingChartProps) {
     const getColors = () => {
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         return {
-            background: isDark ? '#131722' : '#ffffff',
-            text: isDark ? '#d1d4dc' : '#333333',
-            grid: isDark ? '#2a2e39' : '#f0f3fa',
-            up: '#089981', // Vibrant Teal
-            down: '#f23645', // Vibrant Red
-            wickUp: '#089981',
-            wickDown: '#f23645',
+            background: isDark ? '#0b0e11' : '#ffffff',
+            text: isDark ? '#848e9c' : '#474d57',
+            textPrimary: isDark ? '#eaecef' : '#1e2329',
+            grid: isDark ? '#1e2329' : '#f0f0f0',
+            up: '#0ecb81',
+            down: '#f6465d',
+            wickUp: '#0ecb81',
+            wickDown: '#f6465d',
         };
     };
 

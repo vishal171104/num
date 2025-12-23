@@ -22,19 +22,20 @@ export default function Home() {
   }, [user, isLoading, router]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
-      <div className="text-center">
-        <div className="flex items-center justify-center gap-3 mb-4">
-          <div className="w-12 h-12 bg-[var(--accent)] rounded-xl flex items-center justify-center animate-pulse">
-            <span className="text-[var(--accent-foreground)] font-black text-2xl">N</span>
+    <div className="min-h-screen flex items-center justify-center bg-[#050505] noise-bg">
+      <div className="text-center fade-in">
+        <div className="flex items-center justify-center gap-4 mb-6">
+          <div className="w-14 h-14 bg-[#d4af37] rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(212,175,55,0.2)] animate-pulse">
+            <span className="text-black font-black text-3xl tracking-tighter">N</span>
           </div>
         </div>
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">Numatix</h1>
-        <div className="flex items-center justify-center gap-2 mt-4">
-          <div className="w-2 h-2 bg-[var(--accent)] rounded-full animate-bounce [animation-delay:-0.3s]" />
-          <div className="w-2 h-2 bg-[var(--accent)] rounded-full animate-bounce [animation-delay:-0.15s]" />
-          <div className="w-2 h-2 bg-[var(--accent)] rounded-full animate-bounce" />
+        <h1 className="text-3xl font-bold text-white tracking-widest uppercase">Numatix</h1>
+        <div className="flex items-center justify-center gap-3 mt-8">
+          <div className="w-1.5 h-1.5 bg-[#d4af37] rounded-full animate-bounce [animation-delay:-0.3s]" />
+          <div className="w-1.5 h-1.5 bg-[#d4af37] rounded-full animate-bounce [animation-delay:-0.15s]" />
+          <div className="w-1.5 h-1.5 bg-[#d4af37] rounded-full animate-bounce" />
         </div>
+        <p className="text-[10px] text-[#999999] uppercase tracking-[0.3em] mt-12 font-medium">Securing Connection</p>
       </div>
     </div>
   );

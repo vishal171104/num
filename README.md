@@ -38,8 +38,9 @@ The frontend was designed with a "Binance-Inspired" aesthetic, focusing on infor
 -   **Resizable Panelling:** Custom-implemented draggable borders for the Order Form and Orders Table using `mousemove` and `useMemo` hooks.
 -   **Dynamic Font Scaling:** A state-driven scaling engine (`--panel-scale`) that automatically adjusts font sizes and element spacing as the user resizes panels, maintaining visual hierarchy at any width.
 -   **Floating Card Aesthetic:** Implementation of a strict viewport layout (`h-screen`) with `pl-10` and `p-6` padding to create a "suspended" workspace feel, separated by deep shadows and rounded-2xl corners.
--   **Interactive Price Sync:** The Order Form includes a manual-override detection system. It defaults to the live market price but stops auto-syncing if the user starts typing a specific limit, with an instant "Reset to Market" utility.
+-   **Institutional Auth UI:** Overhauled the Login/Register experience with a Bloomberg-grade aesthetic (Amber accents, Glassmorphism, Noise textures).
 -   **Keyboard Hotkeys:** Rapid trading via shortcuts (`B` for Buy, `S` for Sell, `L` for Limit, `M` for Market).
+-   **Multi-Currency Support:** Global unit of account (INR, EUR, etc.) with real-time conversion across the entire platform.
 
 ---
 

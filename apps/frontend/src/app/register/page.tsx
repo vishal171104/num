@@ -38,165 +38,154 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex bg-[var(--background)]">
-      {/* Left Panel - Branding */}
-      <div className="hidden lg:flex lg:flex-1 flex-col justify-between p-12 bg-gradient-to-br from-[#1e2329] to-[#0b0e11]">
-        <div>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[var(--accent)] rounded-lg flex items-center justify-center">
-              <span className="text-[var(--accent-foreground)] font-black text-xl">N</span>
-            </div>
-            <span className="text-xl font-bold text-white">Numatix</span>
+    <div className="min-h-screen flex bg-[#050505] noise-bg overflow-hidden font-sans selection:bg-[#d4af37]/30">
+      {/* Ambient Lighting Background */}
+      <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#d4af37]/5 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] bg-blue-500/5 blur-[120px] rounded-full pointer-events-none" />
+
+      {/* Left Content - Bold Typography */}
+      <div className="hidden lg:flex lg:flex-1 flex-col justify-between p-24 z-10">
+        <div className="flex items-center gap-4 group cursor-default">
+          <div className="w-12 h-12 bg-[#d4af37] rounded-xl flex items-center justify-center transition-transform duration-500 group-hover:-rotate-12">
+            <span className="text-black font-black text-2xl">N</span>
           </div>
+          <span className="text-2xl font-bold text-white tracking-tight">Numatix</span>
         </div>
-        
-        <div className="space-y-6">
-          <h2 className="text-4xl font-bold text-white leading-tight">
-            Start Trading<br />
-            <span className="text-[var(--accent)]">In Minutes.</span>
-          </h2>
-          <p className="text-[var(--text-muted)] text-lg max-w-md">
-            Create your account and connect to global digital asset markets with professional-grade tools.
+
+        <div className="max-w-xl">
+          <h1 className="text-7xl font-bold text-white leading-[1.1] tracking-tight mb-8">
+            Global <br />
+            <span className="text-[#d4af37]">Reach.</span>
+          </h1>
+          <p className="text-[#999999] text-xl font-light leading-relaxed max-w-md">
+            Join the elite network of digital asset traders. Access the world's deepest liquidity pools through a single, secure gateway.
           </p>
-          <div className="flex items-center gap-6 pt-4">
-            <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-[var(--green)]" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              <span className="text-sm text-[var(--foreground-secondary)]">Free account</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-[var(--green)]" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              <span className="text-sm text-[var(--foreground-secondary)]">No KYC required</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-[var(--green)]" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              <span className="text-sm text-[var(--foreground-secondary)]">Instant access</span>
-            </div>
-          </div>
         </div>
-        
-        <div className="text-xs text-[var(--text-muted)]">
-          © 2025 Numatix Digital Systems
+
+        <div className="flex items-center gap-12 border-t border-white/5 pt-12">
+          <div>
+            <div className="text-sm font-medium text-[#d4af37] mb-1 uppercase tracking-widest text-[10px]">Volume</div>
+            <div className="text-2xl font-bold text-white font-mono tracking-tighter">$1.2T+</div>
+          </div>
+          <div>
+            <div className="text-sm font-medium text-[#d4af37] mb-1 uppercase tracking-widest text-[10px]">Security</div>
+            <div className="text-2xl font-bold text-white font-mono tracking-tighter">HSM-Backed</div>
+          </div>
+          <div>
+            <div className="text-sm font-medium text-[#d4af37] mb-1 uppercase tracking-widest text-[10px]">Support</div>
+            <div className="text-2xl font-bold text-white font-mono tracking-tighter">24/7 VIP</div>
+          </div>
         </div>
       </div>
 
-      {/* Right Panel - Register Form */}
-      <div className="flex-1 flex items-center justify-center p-8 overflow-y-auto">
-        <div className="w-full max-w-[380px] fade-in py-8">
-          {/* Mobile Logo */}
-          <div className="lg:hidden text-center mb-8">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <div className="w-8 h-8 bg-[var(--accent)] rounded-lg flex items-center justify-center">
-                <span className="text-[var(--accent-foreground)] font-black text-lg">N</span>
+      {/* Right Content - Floating Card */}
+      <div className="flex-1 flex items-center justify-center p-8 lg:pr-24 z-10 overflow-y-auto py-12">
+        <div className="w-full max-w-[500px] glass-morphism p-10 rounded-[32px] fade-in">
+          {/* Mobile Header */}
+          <div className="lg:hidden flex justify-center mb-10">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-[#d4af37] rounded-lg flex items-center justify-center">
+                <span className="text-black font-black text-lg">N</span>
               </div>
-              <span className="text-lg font-bold text-[var(--foreground)]">Numatix</span>
+              <span className="text-lg font-bold text-white">Numatix</span>
             </div>
           </div>
 
-          <div className="mb-8">
-            <h1 className="text-2xl font-bold text-[var(--foreground)]">Create account</h1>
-            <p className="text-sm text-[var(--text-muted)] mt-1">Enter your details to get started</p>
+          <div className="mb-10 text-center lg:text-left">
+            <h2 className="text-3xl font-bold text-white tracking-tight mb-2">Onboarding</h2>
+            <p className="text-sm text-[#999999]">Establish your institutional credentials.</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
-              <div className="bg-[var(--red-light)] border border-[var(--red)]/20 text-[var(--red)] px-4 py-3 rounded-lg text-sm font-medium">
+              <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl text-xs font-medium text-center">
                 {error}
               </div>
             )}
 
-            <div>
-              <label className="text-xs font-medium text-[var(--text-muted)] mb-2 block">Email</label>
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-[#d4af37] uppercase tracking-widest ml-1">Work Email</label>
               <input
                 type="email"
                 required
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="input-field"
-                placeholder="name@example.com"
+                className="input-field luxury-input"
+                placeholder="name@numatix.sys"
               />
             </div>
 
-            <div>
-              <label className="text-xs font-medium text-[var(--text-muted)] mb-2 block">Password</label>
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-[#d4af37] uppercase tracking-widest ml-1">Master Key</label>
               <input
                 type="password"
                 required
-                minLength={6}
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="input-field"
-                placeholder="Minimum 6 characters"
+                className="input-field luxury-input"
+                placeholder="Minimum 8 characters"
               />
             </div>
 
-            {/* API Keys Section */}
-            <div className="pt-4 border-t border-[var(--border)]">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-medium text-[var(--text-muted)]">Binance API (Optional)</span>
-                <a 
-                  href="https://testnet.binance.vision/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-xs text-[var(--accent)] hover:underline"
-                >
-                  Get API Keys
-                </a>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-[#d4af37] uppercase tracking-widest ml-1">Binance API Key</label>
+                <input
+                  type="text"
+                  value={formData.binanceApiKey}
+                  onChange={(e) => setFormData({ ...formData, binanceApiKey: e.target.value })}
+                  className="input-field luxury-input"
+                  placeholder="Optional"
+                />
               </div>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs font-medium text-[var(--text-muted)] mb-2 block">API Key</label>
-                  <input
-                    type="text"
-                    value={formData.binanceApiKey}
-                    onChange={(e) => setFormData({ ...formData, binanceApiKey: e.target.value })}
-                    className="input-field font-mono text-sm"
-                    placeholder="Enter your API key"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-[var(--text-muted)] mb-2 block">Secret Key</label>
-                  <input
-                    type="password"
-                    value={formData.binanceSecretKey}
-                    onChange={(e) => setFormData({ ...formData, binanceSecretKey: e.target.value })}
-                    className="input-field font-mono text-sm"
-                    placeholder="Enter your secret key"
-                  />
-                </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-[#d4af37] uppercase tracking-widest ml-1">Binance Secret</label>
+                <input
+                  type="password"
+                  value={formData.binanceSecretKey}
+                  onChange={(e) => setFormData({ ...formData, binanceSecretKey: e.target.value })}
+                  className="input-field luxury-input"
+                  placeholder="Optional"
+                />
               </div>
             </div>
 
             <button
               type="submit"
               disabled={isLoading}
-              className="btn-primary w-full"
+              className="btn-luxury w-full flex items-center justify-center gap-3 mt-4"
             >
               {isLoading ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" />
-                  Creating account...
-                </div>
-              ) : 'Create Account'}
+                <>
+                  <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                  PROCESSING
+                </>
+              ) : (
+                <>
+                  ESTABLISH CLEARANCE
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </>
+              )}
             </button>
           </form>
 
-          <div className="mt-8 text-center">
-            <p className="text-sm text-[var(--text-muted)]">
-              Already have an account?{' '}
-              <Link href="/login" className="text-[var(--accent)] font-medium hover:underline">
-                Sign in
+          <div className="mt-10 text-center">
+            <p className="text-xs text-[#999999]">
+              Already have institutional clearance?{' '}
+              <Link href="/login" className="text-[#d4af37] font-bold hover:underline">
+                Portal Access
               </Link>
             </p>
           </div>
         </div>
       </div>
+      
+      {/* Decorative vertical lines */}
+      <div className="absolute top-0 left-[25%] w-[1px] h-full bg-white/[0.02] pointer-events-none" />
+      <div className="absolute top-0 left-[50%] w-[1px] h-full bg-white/[0.02] pointer-events-none" />
+      <div className="absolute top-0 left-[75%] w-[1px] h-full bg-white/[0.02] pointer-events-none" />
     </div>
   );
 }

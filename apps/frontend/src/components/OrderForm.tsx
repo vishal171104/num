@@ -2,6 +2,7 @@
 
 import { useState, memo, useEffect, useCallback } from 'react';
 import { tradingAPI, OrderData } from '@/lib/api';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface OrderFormProps {
   symbol: string;
@@ -14,9 +15,11 @@ function OrderFormComponent({ symbol, currentPrice, onOrderPlaced }: OrderFormPr
   const [orderType, setOrderType] = useState<'MARKET' | 'LIMIT' | 'STOP_MARKET'>('LIMIT');
   const [quantity, setQuantity] = useState('');
   const [price, setPrice] = useState('');
+  const [isPriceDirty, setIsPriceDirty] = useState(false);
   const [range, setRange] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const { currency, format } = useCurrency();
 
   // Extract base asset from symbol
   const baseAsset = symbol.replace('USDT', '').replace('BTC', '').replace('ETH', '');
@@ -28,12 +31,13 @@ function OrderFormComponent({ symbol, currentPrice, onOrderPlaced }: OrderFormPr
     background: `linear-gradient(to right, ${sliderColor} 0%, ${sliderColor} ${range}%, var(--border) ${range}%, var(--border) 100%)`
   };
 
-  // Auto-fill price with current market price when switching to limit orders
+  // Sync price with current market price if not manually edited
   useEffect(() => {
-    if (currentPrice && orderType === 'LIMIT' && !price) {
-      setPrice(currentPrice.toFixed(2));
+    if (currentPrice && !isPriceDirty) {
+      const localPrice = currentPrice * currency.rate;
+      setPrice(localPrice.toFixed(2));
     }
-  }, [currentPrice, orderType]);
+  }, [currentPrice, isPriceDirty, currency.rate]);
 
   // Handle total amount change - auto-calculate quantity
   const handleTotalChange = useCallback((totalValue: string) => {
@@ -49,8 +53,7 @@ function OrderFormComponent({ symbol, currentPrice, onOrderPlaced }: OrderFormPr
   // Handle price change - recalculate quantity if total is set
   const handlePriceChange = useCallback((newPrice: string) => {
     setPrice(newPrice);
-    // If quantity is set, recalculate based on current quantity
-    // This keeps the quantity stable when price changes
+    setIsPriceDirty(newPrice !== ''); // Back to auto-sync if cleared
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,7 +70,7 @@ function OrderFormComponent({ symbol, currentPrice, onOrderPlaced }: OrderFormPr
       };
 
       if (orderType === 'LIMIT' && price) {
-        orderData.price = parseFloat(price.replace(/,/g, ''));
+        orderData.price = parseFloat(price.replace(/,/g, '')) / currency.rate;
       }
 
       await tradingAPI.placeOrder(orderData);
@@ -87,7 +90,27 @@ function OrderFormComponent({ symbol, currentPrice, onOrderPlaced }: OrderFormPr
   };
 
   // Calculate total
-  const total = price && quantity ? (parseFloat(price.replace(/,/g,'')) * parseFloat(quantity)).toFixed(2) : '0.00';
+  const effectivePrice = orderType === 'MARKET' ? (currentPrice || 0) : (parseFloat(price.replace(/,/g,'')) || currentPrice || 0);
+  const total = quantity ? (effectivePrice * parseFloat(quantity)).toFixed(2) : '0.00';
+
+  // Keyboard Shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if user is typing in an input
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement).tagName)) {
+        return;
+      }
+
+      const key = e.key.toLowerCase();
+      if (key === 'b') setSide('BUY');
+      if (key === 's') setSide('SELL');
+      if (key === 'l') setOrderType('LIMIT');
+      if (key === 'm') setOrderType('MARKET');
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <div className="flex flex-col gap-5">
@@ -146,22 +169,44 @@ function OrderFormComponent({ symbol, currentPrice, onOrderPlaced }: OrderFormPr
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Price Input - Only for Limit/Stop orders */}
-        {orderType !== 'MARKET' && (
-          <div className="space-y-2">
-            <label className="text-sm text-[var(--text-muted)] block">Price</label>
-            <div className="input-group">
+        <div className="space-y-2">
+          <label className="text-sm text-[var(--text-muted)] block">Price</label>
+          <div className={`input-group ${orderType === 'MARKET' ? 'bg-[var(--surface-hover)] border-dashed opacity-80' : ''}`}>
+            {orderType === 'MARKET' ? (
+              <input
+                type="text"
+                value="Market Price"
+                readOnly
+                className="input-ghost font-mono text-[var(--text-muted)] italic"
+              />
+            ) : (
               <input
                 type="text"
                 value={price}
-                onChange={(e) => setPrice(e.target.value)}
+                onChange={(e) => handlePriceChange(e.target.value)}
                 placeholder="0.00"
                 className="input-ghost font-mono"
               />
-              <span className="input-suffix">{quoteAsset}</span>
-            </div>
+            )}
+            <span className="input-suffix flex items-center gap-2">
+              <span className="text-[var(--text-muted)]">{currency.symbol}</span>
+              {!isPriceDirty && orderType !== 'MARKET' && (
+                <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-[var(--green-light)] text-[var(--green)] text-[9px] font-bold uppercase tracking-tighter">
+                  Live
+                </div>
+              )}
+              {isPriceDirty && orderType !== 'MARKET' && (
+                <button 
+                  type="button"
+                  onClick={() => setIsPriceDirty(false)}
+                  className="text-[10px] uppercase font-bold text-[var(--accent)] hover:underline"
+                >
+                  Reset
+                </button>
+              )}
+            </span>
           </div>
-        )}
+        </div>
 
         {/* Quantity Input */}
         <div className="space-y-6">
@@ -237,16 +282,25 @@ function OrderFormComponent({ symbol, currentPrice, onOrderPlaced }: OrderFormPr
               type="text"
               value={total}
               readOnly
-              className="input-ghost font-mono text-[var(--text-muted)]"
+              className="input-ghost font-mono text-[var(--foreground)] text-sm"
             />
-            <span className="input-suffix">{quoteAsset}</span>
+            <span className="input-suffix text-xs font-bold text-[var(--accent)]">{currency.symbol}</span>
+          </div>
+          <div className="flex justify-between items-center mt-2 px-1">
+            <span className="text-[10px] uppercase font-bold text-[var(--text-muted)]">REF. AMOUNT</span>
+            <span className="text-[10px] font-medium text-[var(--text-muted)] font-mono">
+              ≈ {(parseFloat(total.replace(/,/g,'')) / currency.rate).toFixed(2)} {quoteAsset}
+            </span>
           </div>
         </div>
 
         {/* Available Balance */}
-        <div className="flex justify-between text-sm py-3 mt-2">
-          <span className="text-[var(--text-muted)]">Available</span>
-          <span className="font-mono text-[var(--foreground)]">0.00 {quoteAsset}</span>
+        <div className="flex justify-between items-start text-sm py-3 mt-2 border-t border-[var(--border)] border-dashed">
+          <span className="text-[var(--text-muted)] text-xs mt-1">Available</span>
+          <div className="flex flex-col items-end">
+            <span className="font-mono font-bold text-[var(--foreground)]">{format(0)}</span>
+            <span className="text-[10px] text-[var(--text-muted)]">0.00 {quoteAsset}</span>
+          </div>
         </div>
 
         {/* Message Toast */}

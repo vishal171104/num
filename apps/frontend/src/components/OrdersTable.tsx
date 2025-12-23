@@ -2,17 +2,21 @@
 
 import { useEffect, useState, memo, useCallback } from 'react';
 import { tradingAPI, Order, Position } from '@/lib/api';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface OrdersTableProps {
   refreshTrigger: number;
   lastUpdate?: any;
+  currentPrice?: number;
+  symbol?: string;
 }
 
-function OrdersTableComponent({ refreshTrigger, lastUpdate }: OrdersTableProps) {
+function OrdersTableComponent({ refreshTrigger, lastUpdate, currentPrice, symbol }: OrdersTableProps) {
   const [activeTab, setActiveTab] = useState<'POSITIONS' | 'ORDERS' | 'TRADES'>('ORDERS');
   const [orders, setOrders] = useState<Order[]>([]);
   const [positions, setPositions] = useState<Position[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { currency, format } = useCurrency();
 
   const fetchData = useCallback(async () => {
     try {
@@ -28,6 +32,16 @@ function OrdersTableComponent({ refreshTrigger, lastUpdate }: OrdersTableProps) 
       setIsLoading(false);
     }
   }, []);
+
+  const handleCancelOrder = async (orderId: string) => {
+    try {
+      await tradingAPI.cancelOrder(orderId);
+      // Optimistically update
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'CANCELLED' } : o));
+    } catch (error) {
+      console.error('Error cancelling order:', error);
+    }
+  };
 
   useEffect(() => {
     fetchData();
@@ -132,14 +146,41 @@ function OrdersTableComponent({ refreshTrigger, lastUpdate }: OrdersTableProps) 
                         {Math.abs(pos.quantity).toFixed(4)}
                       </td>
                       <td className="px-4 py-3 text-right font-mono text-sm text-[var(--text-muted)]">
-                        {pos.avgPrice.toLocaleString()}
+                        {pos.avgPrice > 0 ? pos.avgPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 8 }) : '---'}
                       </td>
                       <td className="px-4 py-3 text-right font-mono text-sm text-[var(--foreground)]">
-                        {pos.avgPrice.toLocaleString()}
+                        {(() => {
+                          const markPrice = pos.symbol === symbol && currentPrice ? currentPrice : pos.avgPrice;
+                          return markPrice > 0 ? markPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 8 }) : '---';
+                        })()}
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <span className="font-mono text-sm text-[var(--green)]">+$0.00</span>
-                        <span className="text-[10px] text-[var(--green)] ml-1">(+0.00%)</span>
+                        {(() => {
+                          const markPrice = pos.symbol === symbol && currentPrice ? currentPrice : pos.avgPrice;
+                          if (pos.avgPrice <= 0 || markPrice <= 0) {
+                            return <span className="text-xs text-[var(--text-muted)]">---</span>;
+                          }
+                          const pnl = (markPrice - pos.avgPrice) * pos.quantity;
+                          const pnlPercent = (markPrice / pos.avgPrice - 1) * 100 * (pos.quantity >= 0 ? 1 : -1);
+                          const isPositive = pnl >= 0;
+                          const colorClass = isPositive ? 'text-[var(--green)]' : 'text-[var(--red)]';
+                          
+                          return (
+                            <div className="flex flex-col items-end">
+                              <span className={`font-mono text-sm ${colorClass}`}>
+                                {isPositive ? '+' : ''}{currency.code === 'USD' ? '$' : ''}{pnl.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </span>
+                              {currency.code !== 'USD' && (
+                                <span className={`text-[10px] opacity-70 ${colorClass}`}>
+                                  ≈ {format(pnl)}
+                                </span>
+                              )}
+                              <span className={`text-[10px] ${colorClass}`}>
+                                ({isPositive ? '+' : ''}{pnlPercent.toFixed(2)}%)
+                              </span>
+                            </div>
+                          );
+                        })()}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <button className="text-xs text-[var(--text-muted)] hover:text-[var(--red)] transition-colors">
@@ -202,7 +243,10 @@ function OrdersTableComponent({ refreshTrigger, lastUpdate }: OrdersTableProps) 
                       </td>
                       <td className="px-4 py-3 text-right">
                         {order.status === 'PENDING' && (
-                          <button className="text-xs text-[var(--text-muted)] hover:text-[var(--red)] transition-colors">
+                          <button 
+                            onClick={() => handleCancelOrder(order.id)}
+                            className="text-xs text-[var(--text-muted)] hover:text-[var(--red)] transition-colors"
+                          >
                             Cancel
                           </button>
                         )}

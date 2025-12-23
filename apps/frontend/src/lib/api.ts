@@ -79,6 +79,7 @@ export const tradingAPI = {
     placeOrder: (data: OrderData) => api.post('/api/trading/orders', data),
     getOrders: () => api.get<{ orders: Order[] }>('/api/trading/orders'),
     getPositions: () => api.get<{ positions: Position[] }>('/api/trading/positions'),
+    cancelOrder: (orderId: string) => api.delete(`/api/trading/orders/${orderId}`),
 };
 
 export default api;

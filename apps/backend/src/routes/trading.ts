@@ -131,4 +131,36 @@ router.get('/positions', async (req: AuthRequest, res: Response): Promise<void> 
     }
 });
 
+// DELETE /api/trading/orders/:orderId - Cancel an order
+router.delete('/orders/:orderId', async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const { orderId } = req.params;
+        const userId = req.userId!;
+
+        // Check if order exists and belongs to user
+        const order = await prisma.orderCommand.findUnique({
+            where: { orderId, userId },
+        });
+
+        if (!order) {
+            res.status(404).json({ error: 'Order not found' });
+            return;
+        }
+
+        if (order.status !== 'PENDING') {
+            res.status(400).json({ error: 'Only pending orders can be cancelled' });
+            return;
+        }
+
+        // Publish cancel command to Redis
+        const redis = await connectRedis();
+        await redis.publish('commands:order:cancel', JSON.stringify({ orderId, userId, symbol: order.symbol }));
+
+        res.json({ message: 'Cancellation command submitted' });
+    } catch (error) {
+        console.error('Cancel order error:', error);
+        res.status(500).json({ error: 'Failed to cancel order' });
+    }
+});
+
 export default router;

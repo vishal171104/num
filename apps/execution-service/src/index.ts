@@ -56,6 +56,7 @@ async function executeOrder(command: OrderCommand) {
             type: command.type,
             quantity: command.quantity,
             timestamp,
+            newClientOrderId: command.orderId,
         };
 
         if (command.type === 'LIMIT' && command.price) {
@@ -79,6 +80,16 @@ async function executeOrder(command: OrderCommand) {
 
         console.log(`✅ Order ${command.orderId} executed successfully`);
 
+        // Calculate actual execution price from fills (Binance returns fills for Market orders)
+        let execPrice = 0;
+        if (response.data.fills && response.data.fills.length > 0) {
+            const totalQty = response.data.fills.reduce((sum: number, fill: any) => sum + parseFloat(fill.qty), 0);
+            const totalCost = response.data.fills.reduce((sum: number, fill: any) => sum + (parseFloat(fill.price) * parseFloat(fill.qty)), 0);
+            execPrice = totalQty > 0 ? totalCost / totalQty : 0;
+        } else {
+            execPrice = parseFloat(response.data.price) || 0;
+        }
+
         // Publish success event to Redis
         const event = {
             orderId: command.orderId,
@@ -87,7 +98,7 @@ async function executeOrder(command: OrderCommand) {
             symbol: command.symbol,
             side: command.side,
             quantity: command.quantity,
-            price: response.data.fills?.[0]?.price || response.data.price || 0,
+            price: execPrice,
             timestamp: new Date().toISOString(),
         };
 
@@ -102,7 +113,7 @@ async function executeOrder(command: OrderCommand) {
                 symbol: command.symbol,
                 side: command.side,
                 quantity: command.quantity,
-                price: parseFloat(event.price),
+                price: event.price,
                 timestamp: new Date(event.timestamp),
             },
         });
@@ -138,6 +149,58 @@ async function executeOrder(command: OrderCommand) {
     }
 }
 
+// Cancel order on Binance
+async function cancelOrder(command: { orderId: string, userId: string, symbol: string }) {
+    try {
+        console.log(`🗑️ Cancelling order ${command.orderId} for user ${command.userId}`);
+
+        const user = await prisma.user.findUnique({
+            where: { id: command.userId },
+            select: { binanceApiKey: true, binanceSecretKey: true },
+        });
+
+        if (!user?.binanceApiKey || !user?.binanceSecretKey) {
+            throw new Error('User Binance API keys not configured');
+        }
+
+        const timestamp = Date.now();
+        const params: any = {
+            symbol: command.symbol,
+            origClientOrderId: command.orderId,
+            timestamp,
+        };
+
+        const queryString = new URLSearchParams(params).toString();
+        const signature = signRequest(queryString, user.binanceSecretKey);
+
+        await axios.delete(
+            `${process.env.BINANCE_API_URL}/v3/order?${queryString}&signature=${signature}`,
+            {
+                headers: { 'X-MBX-APIKEY': user.binanceApiKey },
+            }
+        );
+
+        console.log(`✅ Order ${command.orderId} cancelled successfully`);
+
+        // Update database
+        await prisma.orderCommand.update({
+            where: { orderId: command.orderId },
+            data: { status: 'CANCELLED' },
+        });
+
+        // Publish event
+        await redisClient.publish('events:order:status', JSON.stringify({
+            orderId: command.orderId,
+            userId: command.userId,
+            status: 'CANCELLED',
+            symbol: command.symbol,
+            timestamp: new Date().toISOString(),
+        }));
+    } catch (error: any) {
+        console.error(`❌ Cancellation of ${command.orderId} failed:`, error.response?.data || error.message);
+    }
+}
+
 // Main service
 async function main() {
     console.log('🚀 Order Execution Service starting...');
@@ -151,14 +214,23 @@ async function main() {
 
     await subscriber.subscribe('commands:order:submit', async (message) => {
         try {
-            const command: OrderCommand = JSON.parse(message);
+            const command: OrderCommand = JSON.parse(message.toString());
             await executeOrder(command);
         } catch (error) {
             console.error('Error processing command:', error);
         }
     });
 
-    console.log('👂 Listening for order commands on Redis channel: commands:order:submit');
+    await subscriber.subscribe('commands:order:cancel', async (message) => {
+        try {
+            const command = JSON.parse(message.toString());
+            await cancelOrder(command);
+        } catch (error) {
+            console.error('Error processing cancel command:', error);
+        }
+    });
+
+    console.log('👂 Listening for order commands on Redis channel: commands:order:submit & commands:order:cancel');
 }
 
 main().catch((error) => {

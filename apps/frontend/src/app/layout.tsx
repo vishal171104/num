@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { CurrencyProvider } from "@/contexts/CurrencyContext";
 
 export const metadata: Metadata = {
   title: "Numatix Trading Platform",
@@ -15,9 +16,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased" suppressHydrationWarning>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <CurrencyProvider>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </CurrencyProvider>
       </body>
     </html>
   );

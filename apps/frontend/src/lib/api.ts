@@ -68,6 +68,11 @@ export interface Position {
     symbol: string;
     quantity: number;
     avgPrice: number;
+    size?: string;
+    entryPrice?: string;
+    markPrice?: string;
+    unrealizedPnl?: string;
+    unrealizedPnlPercent?: string;
 }
 
 export const authAPI = {

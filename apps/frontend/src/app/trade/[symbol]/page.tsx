@@ -33,19 +33,25 @@ export default function TradePage() {
   const [ticker, setTicker] = useState<Ticker | null>(null);
   const [symbols, setSymbols] = useState<string[]>([]);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+  const [theme, setTheme] = useState<'light' | 'dark'>('light'); // Default to light per image
+  
+  /* TradePage State for UI interactivity */
+  const [activeTab, setActiveTab] = useState<'positions' | 'orders' | 'trades'>('positions');
+  const [isCurrencyDropdownOpen, setIsCurrencyDropdownOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [orderFormValues, setOrderFormValues] = useState({ price: 0, quantity: 0, total: 0 });
 
   const symbolOptions = useMemo(() => symbols, [symbols]);
 
+  // Force light theme for this specific design request
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark';
     if (savedTheme) {
       setTheme(savedTheme);
       document.documentElement.setAttribute('data-theme', savedTheme);
     } else {
-      // Default to dark theme for trading
-      setTheme('dark');
-      document.documentElement.setAttribute('data-theme', 'dark');
+      setTheme('light');
+      document.documentElement.setAttribute('data-theme', 'light');
     }
   }, []);
 
@@ -104,10 +110,17 @@ export default function TradePage() {
 
   const handleOrderPlaced = () => {
     setRefreshTrigger((prev) => prev + 1);
+    setActiveTab('orders');
   };
 
   const priceChange = ticker ? parseFloat(ticker.priceChangePercent) : 0;
   const isPositive = priceChange >= 0;
+
+  /* Calculation Logic for Account Stats */
+  const { total: formTotal } = orderFormValues;
+  const maintenanceMargin = formTotal > 0 ? formTotal * 0.05 : 0; // Simple 5% model
+  const marginBalance = 30.16; // Mock balance
+  const marginRatio = marginBalance > 0 ? (maintenanceMargin / marginBalance) * 100 : 0;
 
   if (authLoading || (!user && typeof window !== 'undefined' && localStorage.getItem('token'))) {
     return <TradeSkeleton />;
@@ -116,229 +129,204 @@ export default function TradePage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-[var(--background)] flex flex-col fade-in">
-      {/* Compact Header - Binance Style */}
-      <header className="h-14 px-4 bg-[var(--header-bg)] border-b border-[var(--header-border)] flex items-center justify-between sticky top-0 z-50">
-        {/* Left: Logo & Nav */}
-        <div className="flex items-center gap-8">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-[var(--accent)] rounded-lg flex items-center justify-center">
-              <span className="text-[var(--accent-foreground)] font-black text-lg">N</span>
-            </div>
-            <span className="text-lg font-bold text-[var(--foreground)]">Numatix</span>
-          </div>
-          
-          {/* Symbol Selector - Prominent */}
-          <div className="flex items-center gap-3 px-3 py-1.5 bg-[var(--surface-hover)] rounded-lg cursor-pointer hover:bg-[var(--surface-active)] transition-colors">
-            <select
-              value={symbol}
-              onChange={(e) => {
-                const newSymbol = e.target.value;
-                setSymbol(newSymbol);
-                router.push(`/trade/${newSymbol}`);
-              }}
-              className="bg-transparent border-none font-bold text-[var(--foreground)] text-sm cursor-pointer focus:outline-none appearance-none pr-6"
-            >
-              {symbolOptions.map((s) => (
-                <option key={s} value={s} className="bg-[var(--surface)]">{s}</option>
-              ))}
-            </select>
-            <svg className="w-4 h-4 text-[var(--text-muted)] -ml-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </div>
-        </div>
-
-        {/* Center: Price Info Bar */}
-        <div className="hidden lg:flex items-center gap-8">
-          {/* Current Price */}
-          <div className="flex items-center gap-3">
-            <div className="flex flex-col items-end">
-              {currency.code !== 'USD' ? (
-                <>
-                  <span className={`text-xl font-bold font-mono leading-none ${isPositive ? 'text-[var(--green)]' : 'text-[var(--red)]'}`}>
-                    {ticker ? format(parseFloat(ticker.price)) : '---'}
-                  </span>
-                  <span className="text-[10px] font-medium text-[var(--text-muted)] mt-1">
-                    {ticker ? parseFloat(ticker.price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '---'} USDT
-                  </span>
-                </>
-              ) : (
-                <span className={`text-xl font-bold font-mono leading-none ${isPositive ? 'text-[var(--green)]' : 'text-[var(--red)]'}`}>
-                  {ticker ? format(parseFloat(ticker.price)) : '---'}
-                </span>
-              )}
-            </div>
-            <span className={`text-xs font-semibold px-2 py-0.5 rounded ${isPositive ? 'bg-[var(--green-light)] text-[var(--green)]' : 'bg-[var(--red-light)] text-[var(--red)]'}`}>
-              {isPositive ? '+' : ''}{priceChange.toFixed(2)}%
-            </span>
-          </div>
-          
-          {/* 24h Stats */}
-          <div className="flex items-center gap-6 text-xs border-l border-[var(--border)] pl-8 ml-2">
-            <div className="flex flex-col">
-              <span className="text-[var(--text-muted)] mb-1">24h High</span>
-              <span className="font-mono font-medium text-[var(--foreground)]">
-                {ticker ? format(parseFloat(ticker.highPrice), 2) : '---'}
-              </span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[var(--text-muted)] mb-1">24h Low</span>
-              <span className="font-mono font-medium text-[var(--foreground)]">
-                {ticker ? format(parseFloat(ticker.lowPrice), 2) : '---'}
-              </span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[var(--text-muted)] mb-1">24h Volume</span>
-              <span className="font-mono font-medium text-[var(--foreground)]">
-                {ticker ? `${(parseFloat(ticker.volume) / 1000).toFixed(1)}K` : '---'}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Right: Controls */}
+    <div className="min-h-screen bg-[#F8F9FA] text-[#111827] font-sans">
+      {/* Header - Clean White */}
+      <header className="h-16 px-6 bg-white flex items-center justify-between sticky top-0 z-50 border-b border-gray-100 shadow-sm">
+        {/* Logo */}
         <div className="flex items-center gap-3">
-          {/* Connection Status */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--surface-hover)]">
-            <div className={`status-dot ${isConnected ? 'online' : 'offline'}`} />
-            <span className="text-xs font-medium text-[var(--text-muted)] hidden sm:inline">
-              {isConnected ? 'Connected' : 'Offline'}
-            </span>
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-900 to-gray-700 flex items-center justify-center text-white font-bold text-sm">
+            N
           </div>
+          <span className="text-xl font-bold tracking-tight text-[#0B1426]">NUMATIX</span>
+        </div>
 
-          {/* Currency Selector */}
-          <div className="flex items-center gap-2 px-2 py-1 bg-[var(--surface-hover)] rounded-lg hover:bg-[var(--surface-active)] transition-colors">
-            <span className="text-[10px] font-bold text-[var(--text-muted)] pl-1">UNIT</span>
-            <select
-              value={currency.code}
-              onChange={(e) => setCurrencyCode(e.target.value as CurrencyCode)}
-              className="bg-transparent border-none font-bold text-[var(--foreground)] text-xs cursor-pointer focus:outline-none appearance-none pr-5 py-0.5"
-            >
-              {Object.values(CURRENCIES).map((c) => (
-                <option key={c.code} value={c.code} className="bg-[var(--surface)]">{c.code}</option>
-              ))}
-            </select>
-            <svg className="w-3 h-3 text-[var(--text-muted)] -ml-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
-            </svg>
+        {/* Right Controls */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full shadow-sm text-sm font-medium text-gray-700">
+            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+            Live trading
+            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
           </div>
           
-          {/* Theme Toggle */}
-          <button 
-            onClick={toggleTheme}
-            className="w-9 h-9 flex items-center justify-center hover:bg-[var(--surface-hover)] rounded-lg transition-colors"
-            title={theme === 'light' ? 'Switch to Dark' : 'Switch to Light'}
-          >
-            {theme === 'light' ? (
-              <svg className="w-5 h-5 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
-            ) : (
-              <svg className="w-5 h-5 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-            )}
+          <div className="relative">
+             <button 
+               onClick={() => setIsCurrencyDropdownOpen(!isCurrencyDropdownOpen)}
+               className="flex items-center gap-2 px-3 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg text-sm font-bold text-gray-700 transition-colors"
+             >
+                <span>{currency.code}</span>
+                <span className="text-gray-400">({currency.symbol})</span>
+                <svg className={`w-4 h-4 text-gray-400 transition-transform ${isCurrencyDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+             </button>
+
+             {isCurrencyDropdownOpen && (
+               <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50 max-h-96 overflow-y-auto">
+                  {Object.values(CURRENCIES).map((c) => (
+                    <button
+                      key={c.code}
+                      onClick={() => {
+                        setCurrencyCode(c.code as any);
+                        setIsCurrencyDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-3 text-sm font-bold hover:bg-gray-50 flex items-center justify-between ${currency.code === c.code ? 'text-purple-600 bg-purple-50' : 'text-gray-700'}`}
+                    >
+                       <span>{c.name}</span>
+                       <span className="text-gray-400 font-mono">{c.code}</span>
+                    </button>
+                  ))}
+               </div>
+             )}
+          </div>
+
+          <button className="w-10 h-10 flex items-center justify-center rounded-full border border-gray-200 hover:bg-gray-50 transition-colors">
+             <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
           </button>
 
-          {/* User Menu */}
-          <button 
-            onClick={logout} 
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-[var(--surface-hover)] transition-colors group"
-          >
-            <span className="text-sm font-medium text-[var(--foreground)] hidden sm:inline">{user.email.split('@')[0]}</span>
-            <svg className="w-5 h-5 text-[var(--text-muted)] group-hover:text-[var(--red)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-          </button>
+          <div className="relative">
+              <button 
+                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden border border-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+              >
+                 <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'user'}`} alt="User" />
+              </button>
+
+              {isProfileOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50">
+                      <div className="px-4 py-3 border-b border-gray-100">
+                          <p className="text-xs text-gray-500 uppercase font-bold">Signed in as</p>
+                          <p className="text-sm font-bold text-gray-900 truncate" title={user?.email}>{user?.email}</p>
+                      </div>
+                      <div className="py-1">
+                          <button 
+                            onClick={logout}
+                            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-medium transition-colors"
+                          >
+                              Sign out
+                          </button>
+                      </div>
+                  </div>
+              )}
+          </div>
         </div>
       </header>
 
-      {/* Main Trading Layout */}
-      <main className="flex-1 flex flex-col lg:flex-row">
-        
-        {/* Left Panel: Order Form */}
-        <aside className="w-full lg:w-80 xl:w-96 bg-[var(--surface)] border-r border-[var(--border)] flex flex-col">
-          {/* Order Form Section */}
-          <div className="p-4 flex-1 overflow-y-auto">
-            <OrderForm 
-              symbol={symbol} 
-              currentPrice={ticker ? parseFloat(ticker.price) : undefined} 
-              onOrderPlaced={handleOrderPlaced} 
-            />
-          </div>
-          
-          {/* Account Summary */}
-          <div className="p-4 border-t border-[var(--border)] bg-[var(--background-secondary)]">
-            <h4 className="text-xs font-medium text-[var(--text-muted)] mb-3 uppercase tracking-wider">Account Overview</h4>
-            <div className="space-y-3">
-              <div className="flex justify-between items-start">
-                <span className="text-[var(--text-muted)] text-xs">Available Balance</span>
-                <div className="flex flex-col items-end">
-                  <span className="font-mono font-bold text-sm text-[var(--foreground)]">{format(0)}</span>
-                  <span className="text-[10px] text-[var(--text-muted)]">0.00 USDT</span>
+      {/* Main Content */}
+      <main className="w-full h-[calc(100vh-64px)] p-6 lg:p-8 overflow-hidden flex flex-col">
+        <h1 className="text-3xl font-bold text-[#111827] mb-6 shrink-0">Portfolio</h1>
+
+        <div className="dashboard-grid h-full min-h-0">
+           {/* Left Column: Order Form + Account */}
+           <div className="space-y-6 overflow-y-auto pb-6">
+             <div className="card-dashboard">
+                <OrderForm 
+                  symbol={symbol} 
+                  currentPrice={ticker ? parseFloat(ticker.price) : undefined} 
+                  onOrderPlaced={handleOrderPlaced} 
+                  onValuesChange={setOrderFormValues}
+                />
+             </div>
+             
+             {/* Account Section - Separate Card per Design */}
+             <div className="card-dashboard">
+                <h3 className="text-lg font-bold text-[#111827] mb-6">Account</h3>
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-500 font-medium">Margin Ratio</span>
+                    <span className={`font-bold ${marginRatio > 80 ? 'text-red-500' : 'text-[#111827]'}`}>
+                        {marginRatio.toFixed(2)}%
+                    </span>
+                  </div>
+                  <div className="h-px bg-gray-100" />
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-500 font-medium">Maintenance Margin</span>
+                    <span className="font-bold text-[#111827]">{format(maintenanceMargin)}</span>
+                  </div>
+                  <div className="h-px bg-gray-100" />
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-500 font-medium">Margin Balance</span>
+                    <span className="font-bold text-gray-400">{format(marginBalance)}</span>
+                  </div>
                 </div>
+             </div>
+           </div>
+
+           {/* Right Column: Chart + Table - Full Height Flex */}
+           <div className="flex flex-col gap-6 h-full min-h-0 pb-6">
+              {/* Chart Card - ~60% Height */}
+              <div className="card-dashboard flex-[1.5] flex flex-col min-h-0 p-0 overflow-hidden relative">
+                 <div className="absolute top-4 left-6 right-6 z-10 flex items-start justify-between pointer-events-none">
+                    <div className="pointer-events-auto bg-white/90 backdrop-blur-sm p-2 rounded-xl border border-gray-100 shadow-sm">
+                       <div className="flex items-center gap-3">
+                          <h2 className="text-xl font-bold text-[#111827]">{symbol.replace('USDT', '/USDT')}</h2>
+                          <span className="text-xl font-bold font-mono text-[#111827]">
+                             {ticker ? format(parseFloat(ticker.price)) : '---'}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded text-xs font-bold ${isPositive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                             {priceChange.toFixed(2)}%
+                          </span>
+                       </div>
+                    </div>
+                    
+                    {/* Time Intervals */}
+                    <div className="pointer-events-auto flex bg-white/90 backdrop-blur-sm border border-gray-200 rounded-lg p-1 gap-1 shadow-sm">
+                       {['1m', '5m', '1D', '1W'].map((t) => (
+                          <button 
+                             key={t}
+                             onClick={() => setInterval(t.toLowerCase())}
+                             className={`px-3 py-1 text-xs font-semibold rounded ${interval === t.toLowerCase() ? 'bg-gray-100 text-black' : 'text-gray-400 hover:text-gray-600'}`}
+                          >
+                             {t}
+                          </button>
+                       ))}
+                    </div>
+                 </div>
+                 
+                 <div className="w-full h-full">
+                    <TradingChart symbol={symbol} interval={interval} />
+                 </div>
               </div>
-              <div className="flex justify-between items-start">
-                <span className="text-[var(--text-muted)] text-xs">Margin Balance</span>
-                <div className="flex flex-col items-end">
-                  <span className="font-mono font-bold text-sm text-[var(--foreground)]">{format(0)}</span>
-                  <span className="text-[10px] text-[var(--text-muted)]">0.00 USDT</span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center pt-1">
-                <span className="text-[var(--text-muted)] text-xs">Margin Ratio</span>
-                <span className="font-mono font-bold text-xs text-[var(--green)]">0.00%</span>
-              </div>
-            </div>
-          </div>
-        </aside>
-        
-        {/* Center: Chart & Tables */}
-        <section className="flex-1 flex flex-col min-w-0">
-          {/* Interval Selector Bar */}
-          <div className="h-12 px-4 bg-[var(--surface)] border-b border-[var(--border)] flex items-center justify-between">
-            <div className="flex items-center gap-1">
-              {['1m', '5m', '15m', '1h', '4h', '1d', '1w'].map((int) => (
-                <button
-                  key={int}
-                  onClick={() => setInterval(int)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
-                    interval === int
-                      ? 'bg-[var(--accent)] text-[var(--accent-foreground)]'
-                      : 'text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface-hover)]'
-                  }`}
-                >
-                  {int.toUpperCase()}
-                </button>
-              ))}
-            </div>
-            
-            {/* Chart Tools */}
-            <div className="flex items-center gap-2">
-              <button className="p-2 text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface-hover)] rounded transition-colors" title="Indicators">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-              </button>
-              <button className="p-2 text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface-hover)] rounded transition-colors" title="Drawing Tools">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-              </button>
-              <button className="p-2 text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface-hover)] rounded transition-colors" title="Settings">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-              </button>
-            </div>
-          </div>
-          
-          {/* Chart Area */}
-          <div className="flex-1 min-h-[400px] lg:min-h-[500px] bg-[var(--background)]">
-            <TradingChart symbol={symbol} interval={interval} />
-          </div>
-          
-          {/* Orders Table */}
-          <div className="h-[300px] lg:h-[280px] border-t border-[var(--border)] bg-[var(--surface)]">
-            <OrdersTable 
-              refreshTrigger={refreshTrigger} 
-              lastUpdate={lastMessage} 
-              symbol={symbol}
-              currentPrice={ticker ? parseFloat(ticker.price) : undefined}
-            />
-          </div>
-        </section>
+
+               {/* Table Card - ~40% Height */}
+               <div className="card-dashboard flex-1 flex flex-col min-h-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 shrink-0">
+                     <div className="flex items-center gap-2 bg-gray-100/50 p-1.5 rounded-full border border-gray-200/50">
+                        {['Positions', 'Orders', 'Trades'].map((tab) => (
+                           <button 
+                             key={tab} 
+                             onClick={() => setActiveTab(tab.toLowerCase() as any)}
+                             className={`px-6 py-2 rounded-full text-sm font-bold transition-all shadow-sm ${
+                                activeTab === tab.toLowerCase() 
+                                  ? 'bg-white text-gray-900 shadow-md transform scale-105' 
+                                  : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'
+                             }`}
+                           >
+                              {tab}
+                           </button>
+                        ))}
+                     </div>
+                     <div className="relative">
+                        <svg className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <input 
+                           type="text" 
+                           placeholder="Search" 
+                           className="input-search-rounded w-64 text-sm font-medium focus:outline-none focus:border-purple-500 transition-colors"
+                        />
+                     </div>
+                  </div>
+                  
+                  <div className="flex-1 overflow-y-auto">
+                    <OrdersTable 
+                      refreshTrigger={refreshTrigger} 
+                      lastUpdate={lastMessage} 
+                      symbol={symbol}
+                      currentPrice={ticker ? parseFloat(ticker.price) : undefined}
+                      activeTab={activeTab}
+                    />
+                  </div>
+               </div>
+           </div>
+        </div>
       </main>
     </div>
   );

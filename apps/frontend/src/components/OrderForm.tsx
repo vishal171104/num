@@ -8,348 +8,243 @@ interface OrderFormProps {
   symbol: string;
   currentPrice?: number;
   onOrderPlaced?: () => void;
+  onValuesChange?: (values: { price: number; quantity: number; total: number }) => void;
 }
 
-function OrderFormComponent({ symbol, currentPrice, onOrderPlaced }: OrderFormProps) {
+function OrderForm({ symbol, currentPrice, onOrderPlaced, onValuesChange }: OrderFormProps) {
   const [side, setSide] = useState<'BUY' | 'SELL'>('BUY');
-  const [orderType, setOrderType] = useState<'MARKET' | 'LIMIT' | 'STOP_MARKET'>('LIMIT');
-  const [quantity, setQuantity] = useState('');
+  const [orderType, setOrderType] = useState<'LIMIT' | 'MARKET' | 'STOP_MARKET'>('LIMIT');
   const [price, setPrice] = useState('');
-  const [isPriceDirty, setIsPriceDirty] = useState(false);
+  const [quantity, setQuantity] = useState('');
+  const [total, setTotal] = useState('');
   const [range, setRange] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPriceDirty, setIsPriceDirty] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  
   const { currency, format } = useCurrency();
 
-  // Extract base asset from symbol
-  const baseAsset = symbol.replace('USDT', '').replace('BTC', '').replace('ETH', '');
-  const quoteAsset = symbol.includes('USDT') ? 'USDT' : symbol.includes('BTC') ? 'BTC' : 'ETH';
+  // Extract assets
+  const baseAsset = symbol.replace('USDT', '').replace('BTC', '').replace('ETH', ''); 
+  // Simplified logic, usually regex is better but this works for Majors
+  const quoteAsset = 'USDT';
 
-  // Slider style with dynamic color based on side
-  const sliderColor = side === 'BUY' ? 'var(--green)' : 'var(--red)';
-  const sliderStyle = {
-    background: `linear-gradient(to right, ${sliderColor} 0%, ${sliderColor} ${range}%, var(--border) ${range}%, var(--border) 100%)`
+  // Sync price
+  useEffect(() => {
+    if (currentPrice && !isPriceDirty && orderType === 'LIMIT') {
+      setPrice(currentPrice.toFixed(2));
+    }
+  }, [currentPrice, isPriceDirty, orderType]);
+
+  // Broadcast values to parent for Account Stats
+  useEffect(() => {
+    if (onValuesChange) {
+      onValuesChange({
+        price: parseFloat(price) || 0,
+        quantity: parseFloat(quantity) || 0,
+        total: parseFloat(total) || 0
+      });
+    }
+  }, [price, quantity, total, onValuesChange]);
+
+  const handleTotalChange = (val: string) => {
+    setTotal(val);
+    const numTotal = parseFloat(val);
+    const numPrice = parseFloat(price);
+    if (!isNaN(numTotal) && !isNaN(numPrice) && numPrice > 0) {
+      setQuantity((numTotal / numPrice).toFixed(5));
+    }
   };
 
-  // Sync price with current market price if not manually edited
-  useEffect(() => {
-    if (currentPrice && !isPriceDirty) {
-      const localPrice = currentPrice * currency.rate;
-      setPrice(localPrice.toFixed(2));
+  const handleQuantityChange = (val: string) => {
+    setQuantity(val);
+    const numQty = parseFloat(val);
+    const numPrice = parseFloat(price);
+    if (!isNaN(numQty) && !isNaN(numPrice)) {
+       setTotal((numQty * numPrice).toFixed(2));
     }
-  }, [currentPrice, isPriceDirty, currency.rate]);
-
-  // Handle total amount change - auto-calculate quantity
-  const handleTotalChange = useCallback((totalValue: string) => {
-    const numericTotal = parseFloat(totalValue.replace(/,/g, ''));
-    const priceValue = parseFloat(price.replace(/,/g, '')) || currentPrice || 0;
-    
-    if (!isNaN(numericTotal) && priceValue > 0) {
-      const calculatedQuantity = numericTotal / priceValue;
-      setQuantity(calculatedQuantity.toFixed(6));
-    }
-  }, [price, currentPrice]);
-
-  // Handle price change - recalculate quantity if total is set
-  const handlePriceChange = useCallback((newPrice: string) => {
-    setPrice(newPrice);
-    setIsPriceDirty(newPrice !== ''); // Back to auto-sync if cleared
-  }, []);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setMessage(null);
+    if (!token) return; 
     setIsSubmitting(true);
-
+    
     try {
-      const orderData: OrderData = {
-        symbol,
-        side,
-        type: orderType === 'STOP_MARKET' ? 'MARKET' : orderType,
-        quantity: parseFloat(quantity) || 0.001,
-      };
+        await tradingAPI.placeOrder({
+            symbol,
+            side,
+            type: orderType,
+            quantity: parseFloat(quantity),
+            price: orderType === 'LIMIT' ? parseFloat(price) : undefined,
+        });
 
-      if (orderType === 'LIMIT' && price) {
-        orderData.price = parseFloat(price.replace(/,/g, '')) / currency.rate;
-      }
-
-      await tradingAPI.placeOrder(orderData);
-      
-      setMessage({ type: 'success', text: 'Order placed successfully' });
-      if (onOrderPlaced) onOrderPlaced();
-      
-      // Reset form
-      setQuantity('');
-      setRange(0);
-      setTimeout(() => setMessage(null), 3000);
-    } catch (error: any) {
-      setMessage({ type: 'error', text: error.response?.data?.error || 'Order failed' });
+        if (orderType === 'MARKET') {
+            setQuantity('');
+            setTotal('');
+        }
+        
+        if (onOrderPlaced) onOrderPlaced();
+    } catch (error) {
+        console.error("Order failed", error);
+        alert("Order failed. Ensure backend is running.");
     } finally {
-      setIsSubmitting(false);
+        setIsSubmitting(false);
     }
   };
-
-  // Calculate total
-  const effectivePrice = orderType === 'MARKET' ? (currentPrice || 0) : (parseFloat(price.replace(/,/g,'')) || currentPrice || 0);
-  const total = quantity ? (effectivePrice * parseFloat(quantity)).toFixed(2) : '0.00';
-
-  // Keyboard Shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger if user is typing in an input
-      if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement).tagName)) {
-        return;
-      }
-
-      const key = e.key.toLowerCase();
-      if (key === 'b') setSide('BUY');
-      if (key === 's') setSide('SELL');
-      if (key === 'l') setOrderType('LIMIT');
-      if (key === 'm') setOrderType('MARKET');
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  
+  // Dummy token check
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
   return (
-    <div className="flex flex-col gap-5">
-      {/* Buy/Sell Toggle - Enhanced */}
-      <div className="grid grid-cols-2 gap-3 p-2 bg-[var(--background-secondary)] rounded-xl mt-3">
-        <button
-          type="button"
-          onClick={() => setSide('BUY')}
-          className={`trade-side-btn py-4 text-base font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
-            side === 'BUY'
-              ? 'bg-[var(--green)] text-white shadow-[0_4px_20px_rgba(14,203,129,0.4)] scale-[1.02]'
-              : 'bg-[var(--surface-hover)] text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface-active)]'
-          }`}
-        >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-          </svg>
-          Buy
-        </button>
-        <button
-          type="button"
-          onClick={() => setSide('SELL')}
-          className={`trade-side-btn py-4 text-base font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
-            side === 'SELL'
-              ? 'bg-[var(--red)] text-white shadow-[0_4px_20px_rgba(246,70,93,0.4)] scale-[1.02]'
-              : 'bg-[var(--surface-hover)] text-[var(--text-muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface-active)]'
-          }`}
-        >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-          </svg>
-          Sell
-        </button>
+    <div className="flex flex-col h-full font-sans">
+      {/* Top Tabs: Buy / Sell - BIGGER & SPACIOUS */}
+      <div className="flex items-center gap-4 mb-8">
+           <button
+             onClick={() => setSide('BUY')}
+             className={`flex-1 h-14 rounded-xl text-lg font-black transition-all shadow-sm ${
+               side === 'BUY' 
+                 ? 'bg-green-500 text-white shadow-green-200' 
+                 : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+             }`}
+           >
+             BUY
+           </button>
+           <button
+             onClick={() => setSide('SELL')}
+             className={`flex-1 h-14 rounded-xl text-lg font-black transition-all shadow-sm ${
+               side === 'SELL' 
+                 ? 'bg-red-500 text-white shadow-red-200' 
+                 : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+             }`}
+           >
+             SELL
+           </button>
       </div>
 
       {/* Order Type Tabs */}
-      <div className="flex gap-5 pb-3 border-b border-[var(--border)]">
-        {[
-          { label: 'Limit', value: 'LIMIT' },
-          { label: 'Market', value: 'MARKET' },
-          { label: 'Stop', value: 'STOP_MARKET' }
-        ].map((type) => (
-          <button
-            key={type.value}
-            type="button"
-            onClick={() => setOrderType(type.value as any)}
-            className={`pb-2 text-sm font-medium transition-all border-b-2 -mb-px ${
-              orderType === type.value
-                ? 'border-[var(--accent)] text-[var(--foreground)]'
-                : 'border-transparent text-[var(--text-muted)] hover:text-[var(--foreground)]'
-            }`}
-          >
-            {type.label}
-          </button>
+      <div className="flex items-center gap-6 mb-6 border-b border-gray-100">
+        {['Limit', 'Market', 'Stop Market'].map((t) => (
+           <button
+             key={t}
+             onClick={() => setOrderType(t === 'Stop Market' ? 'STOP_MARKET' : t.toUpperCase() as any)}
+             className={`pb-3 text-sm font-semibold transition-all relative ${
+               (t === 'Stop Market' ? 'STOP_MARKET' : t.toUpperCase()) === orderType
+                 ? 'text-gray-900 after:absolute after:bottom-0 after:left-0 after:w-full after:h-[2px] after:bg-[#8b5cf6]'
+                 : 'text-gray-400 hover:text-gray-600'
+             }`}
+           >
+             {t}
+           </button>
         ))}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Limit Price */}
         <div className="space-y-2">
-          <label className="text-sm text-[var(--text-muted)] block">Price</label>
-          <div className={`input-group ${orderType === 'MARKET' ? 'bg-[var(--surface-hover)] border-dashed opacity-80' : ''}`}>
-            {orderType === 'MARKET' ? (
-              <input
-                type="text"
-                value="Market Price"
-                readOnly
-                className="input-ghost font-mono text-[var(--text-muted)] italic"
-              />
-            ) : (
-              <input
-                type="text"
+           <div className="flex justify-between items-center">
+             <label className="text-xs font-bold text-gray-500 uppercase">Limit price</label>
+             {/* Dynamic Approx Value based on Global Currency */}
+             <span className="text-[10px] font-bold text-gray-400">
+                ≈ {price ? format(parseFloat(price)) : format(0)}
+             </span>
+           </div>
+           
+           <div className="relative group">
+              <input 
+                type="text" 
                 value={price}
-                onChange={(e) => handlePriceChange(e.target.value)}
-                placeholder="0.00"
-                className="input-ghost font-mono"
+                onChange={(e) => {
+                   setPrice(e.target.value);
+                   setIsPriceDirty(true);
+                }}
+                className="w-full h-12 px-4 rounded-xl border border-gray-200 bg-white text-gray-900 font-mono text-sm focus:outline-none focus:border-[#8b5cf6] transition-colors"
               />
-            )}
-            <span className="input-suffix flex items-center gap-2">
-              <span className="text-[var(--text-muted)]">{currency.symbol}</span>
-              {!isPriceDirty && orderType !== 'MARKET' && (
-                <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-[var(--green-light)] text-[var(--green)] text-[9px] font-bold uppercase tracking-tighter">
-                  Live
-                </div>
-              )}
-              {isPriceDirty && orderType !== 'MARKET' && (
-                <button 
-                  type="button"
-                  onClick={() => setIsPriceDirty(false)}
-                  className="text-[10px] uppercase font-bold text-[var(--accent)] hover:underline"
-                >
-                  Reset
-                </button>
-              )}
-            </span>
-          </div>
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">
+                 USDT
+              </span>
+           </div>
         </div>
 
-        {/* Quantity Input */}
-        <div className="space-y-6">
-          <label className="text-sm text-[var(--text-muted)] block">Amount</label>
-          <div className="input-group">
-            <input
-              type="text"
-              value={quantity}
-              onChange={(e) => setQuantity(e.target.value)}
-              placeholder="0.00"
-              className="input-ghost font-mono"
-            />
-            <span className="input-suffix">{baseAsset}</span>
-          </div>
+        {/* Quantity & Total Row */}
+        <div className="grid grid-cols-2 gap-4">
+           {/* Quantity */}
+           <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-500 uppercase">Quantity</label>
+              <div className="relative">
+                 <input 
+                   type="text" 
+                   value={quantity}
+                   onChange={(e) => handleQuantityChange(e.target.value)}
+                   className="w-full h-12 px-4 pr-12 rounded-xl border border-gray-200 bg-white text-gray-900 font-mono text-sm focus:outline-none focus:border-[#8b5cf6] transition-colors"
+                 />
+                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">
+                    {baseAsset}
+                 </span>
+              </div>
+           </div>
+
+           {/* Total */}
+           <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-500 uppercase">Total</label>
+              <div className="relative">
+                 <input 
+                   type="text" 
+                   value={total ? `= ${total}` : ''}
+                   onChange={(e) => handleTotalChange(e.target.value.replace('= ', ''))}
+                   className="w-full h-12 px-4 pr-12 rounded-xl border border-gray-200 bg-white text-gray-900 font-mono text-sm focus:outline-none focus:border-[#8b5cf6] transition-colors"
+                 />
+                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">
+                    USDT
+                 </span>
+              </div>
+           </div>
         </div>
 
-        {/* Percentage Slider - Enhanced */}
-        <div className="space-y-4 py-4">
-          {/* Slider Track with Markers */}
-          <div className="relative">
-            {/* Tick Marks */}
-            <div className="absolute top-1/2 -translate-y-1/2 w-full flex justify-between px-[6px] pointer-events-none">
-              {[0, 25, 50, 75, 100].map((val) => (
-                <div
-                  key={val}
-                  className={`w-2.5 h-2.5 rounded-full transition-all duration-200 ${
-                    range >= val
-                      ? side === 'BUY'
-                        ? 'bg-[var(--green)] shadow-[0_0_6px_rgba(14,203,129,0.6)]'
-                        : 'bg-[var(--red)] shadow-[0_0_6px_rgba(246,70,93,0.6)]'
-                      : 'bg-[var(--border)]'
-                  }`}
-                />
-              ))}
-            </div>
-            {/* Range Input */}
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={range}
-              onChange={(e) => setRange(parseInt(e.target.value))}
-              style={sliderStyle}
-              className="slider-enhanced w-full h-3 cursor-pointer"
-            />
-          </div>
-          {/* Percentage Buttons */}
-          <div className="grid grid-cols-5 gap-3 mt-2">
-            {[0, 25, 50, 75, 100].map((val) => (
-              <button
-                key={val}
-                type="button"
-                onClick={() => setRange(val)}
-                className={`py-2.5 px-3 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                  range === val
-                    ? side === 'BUY'
-                      ? 'bg-[var(--green)] text-white shadow-[0_2px_10px_rgba(14,203,129,0.3)]'
-                      : 'bg-[var(--red)] text-white shadow-[0_2px_10px_rgba(246,70,93,0.3)]'
-                    : 'bg-[var(--surface-hover)] text-[var(--text-muted)] hover:bg-[var(--surface-active)] hover:text-[var(--foreground)]'
-                }`}
-              >
-                {val}%
-              </button>
-            ))}
-          </div>
+        {/* Slider */}
+        <div className="py-2">
+           <div className="flex items-center gap-4">
+              <input 
+                type="range" 
+                min="0" 
+                max="100" 
+                value={range}
+                onChange={(e) => setRange(parseInt(e.target.value))}
+                className="w-full h-2 bg-gray-100 rounded-full appearance-none cursor-pointer slider-purple"
+              />
+              <span className="text-sm font-bold text-gray-500 w-12 text-right">{range}%</span>
+           </div>
         </div>
 
-        {/* Total */}
-        <div className="space-y-2">
-          <label className="text-sm text-[var(--text-muted)] block">Total</label>
-          <div className="input-group bg-[var(--surface-hover)]">
-            <input
-              type="text"
-              value={total}
-              readOnly
-              className="input-ghost font-mono text-[var(--foreground)] text-sm"
-            />
-            <span className="input-suffix text-xs font-bold text-[var(--accent)]">{currency.symbol}</span>
-          </div>
-          <div className="flex justify-between items-center mt-2 px-1">
-            <span className="text-[10px] uppercase font-bold text-[var(--text-muted)]">REF. AMOUNT</span>
-            <span className="text-[10px] font-medium text-[var(--text-muted)] font-mono">
-              ≈ {(parseFloat(total.replace(/,/g,'')) / currency.rate).toFixed(2)} {quoteAsset}
-            </span>
-          </div>
+        {/* Balance Row */}
+        <div className="flex items-center justify-between pt-2">
+           <div className="flex items-center gap-2 text-gray-900 font-bold text-sm">
+              <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
+              {format(30.16)}
+           </div>
+           <button type="button" className="px-4 py-1.5 rounded-full bg-[#f3e8ff] text-[#7e22ce] text-xs font-bold hover:bg-[#e9d5ff] transition-colors">
+              Add funds
+           </button>
         </div>
 
-        {/* Available Balance */}
-        <div className="flex justify-between items-start text-sm py-3 mt-2 border-t border-[var(--border)] border-dashed">
-          <span className="text-[var(--text-muted)] text-xs mt-1">Available</span>
-          <div className="flex flex-col items-end">
-            <span className="font-mono font-bold text-[var(--foreground)]">{format(0)}</span>
-            <span className="text-[10px] text-[var(--text-muted)]">0.00 {quoteAsset}</span>
-          </div>
+        <div className="pt-4">
+           {token ? (
+             <button 
+               type="submit" 
+               disabled={isSubmitting}
+               className="btn-black-solid text-sm uppercase tracking-wide"
+             >
+               {isSubmitting ? 'Processing...' : `${side} ${symbol.replace('USDT', '/USD')}`}
+             </button>
+           ) : (
+             <button type="button" className="btn-black-solid opacity-50 cursor-not-allowed">
+               Log In to Trade
+             </button>
+           )}
         </div>
-
-        {/* Message Toast */}
-        {message && (
-          <div className={`p-3 rounded-lg text-sm font-medium text-center ${
-            message.type === 'success' 
-              ? 'bg-[var(--green-light)] text-[var(--green)]' 
-              : 'bg-[var(--red-light)] text-[var(--red)]'
-          }`}>
-            {message.text}
-          </div>
-        )}
-
-        {/* Submit Button - Enhanced */}
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className={`submit-trade-btn w-full py-5 text-lg font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-3 ${
-            side === 'BUY'
-              ? 'bg-[var(--green)] hover:bg-[var(--green-hover)] text-white shadow-[0_4px_20px_rgba(14,203,129,0.35)] hover:shadow-[0_6px_25px_rgba(14,203,129,0.5)] hover:scale-[1.02]'
-              : 'bg-[var(--red)] hover:bg-[var(--red-hover)] text-white shadow-[0_4px_20px_rgba(246,70,93,0.35)] hover:shadow-[0_6px_25px_rgba(246,70,93,0.5)] hover:scale-[1.02]'
-          } ${isSubmitting ? 'opacity-50 cursor-not-allowed scale-100' : ''}`}
-        >
-          {isSubmitting ? (
-            <span className="flex items-center justify-center gap-3">
-              <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              Processing...
-            </span>
-          ) : (
-            <>
-              {side === 'BUY' ? (
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                </svg>
-              )}
-              {side === 'BUY' ? 'Buy' : 'Sell'} {baseAsset}
-            </>
-          )}
-        </button>
       </form>
     </div>
   );
 }
 
-export default memo(OrderFormComponent);
+export default memo(OrderForm);

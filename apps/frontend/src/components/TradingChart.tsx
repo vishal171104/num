@@ -144,16 +144,21 @@ function TradingChartComponent({ symbol, interval }: TradingChartProps) {
         candlestickSeriesRef.current = candlestickSeries;
         volumeSeriesRef.current = volumeSeries;
 
-        const handleResize = () => {
+        // Resize Observer
+        const resizeObserver = new ResizeObserver((entries) => {
+            if (entries.length === 0 || !entries[0].target) return;
+            // Use client dimensions directly from ref to be safe
             if (chartContainerRef.current && chartRef.current) {
-                chartRef.current.applyOptions({
-                    width: chartContainerRef.current.clientWidth,
-                    height: chartContainerRef.current.clientHeight,
+                chartRef.current.applyOptions({ 
+                    width: chartContainerRef.current.clientWidth, 
+                    height: chartContainerRef.current.clientHeight 
                 });
             }
-        };
+        });
 
-        window.addEventListener('resize', handleResize);
+        if (chartContainerRef.current) {
+            resizeObserver.observe(chartContainerRef.current);
+        }
 
         // Observer for theme changes
         const observer = new MutationObserver(() => {
@@ -166,7 +171,7 @@ function TradingChartComponent({ symbol, interval }: TradingChartProps) {
         observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
         return () => {
-            window.removeEventListener('resize', handleResize);
+            resizeObserver.disconnect();
             observer.disconnect();
             chart.remove();
         };

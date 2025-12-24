@@ -102,7 +102,7 @@ export default function LoginPage() {
             )}
 
             <div className="space-y-2">
-              <label className="text-[10px] font-bold text-[#d4af37] uppercase tracking-widest ml-1">Work Email</label>
+              <label className="text-[10px] font-bold text-[#d4af37] uppercase tracking-widest ml-1">Email</label>
               <input
                 type="email"
                 required
@@ -115,7 +115,7 @@ export default function LoginPage() {
 
             <div className="space-y-2">
               <div className="flex justify-between ml-1">
-                <label className="text-[10px] font-bold text-[#d4af37] uppercase tracking-widest">Master Key</label>
+                <label className="text-[10px] font-bold text-[#d4af37] uppercase tracking-widest">Password</label>
                 <a href="#" className="text-[10px] font-bold text-[#999999] hover:text-[#d4af37] transition-colors uppercase tracking-widest">Reset</a>
               </div>
               <input
@@ -153,7 +153,7 @@ export default function LoginPage() {
             <p className="text-xs text-[#999999]">
               Don't have an institutional account?{' '}
               <Link href="/register" className="text-[#d4af37] font-bold hover:underline">
-                Register Clearance
+                Register 
               </Link>
             </p>
           </div>

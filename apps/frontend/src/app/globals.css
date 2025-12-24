@@ -89,6 +89,92 @@
   --luxury-text-secondary: #999999;
 }
 
+/* Dashboard Layout Utilities */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 24px;
+}
+
+.card-dashboard {
+  background: var(--surface);
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.03);
+  padding: 24px;
+}
+
+/* Custom Purple Accents from Image */
+.accent-purple {
+  color: #8b5cf6;
+}
+
+.bg-purple-soft {
+  background: #f3e8ff;
+  color: #7e22ce;
+}
+
+.border-purple {
+  border-color: #8b5cf6;
+}
+
+/* Custom Black Button */
+.btn-black-solid {
+  background: #111827;
+  color: #ffffff;
+  border-radius: 12px;
+  font-weight: 600;
+  padding: 14px;
+  width: 100%;
+  transition: all 0.2s;
+  border: 2px solid transparent;
+}
+
+.btn-black-solid:hover {
+  background: #000000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Tab Underline Purple */
+.tab-purple-underline {
+  border-bottom: 2px solid #8b5cf6;
+  color: #111827;
+  font-weight: 600;
+}
+
+/* Slider Customization */
+.slider-purple::-webkit-slider-thumb {
+  background: #8b5cf6 !important;
+  border-color: #ffffff !important;
+}
+
+.slider-purple::-webkit-slider-runnable-track {
+  background: #e5e7eb;
+}
+
+/* For the filled part of the slider, we might need a JS solution or a complex gradient, 
+   but for now let's style the thumb and basic track */
+
+/* Folder Icon Style */
+.icon-folder {
+  width: 20px;
+  height: 20px;
+  color: #374151;
+}
+
+/* Table Row Hover */
+.table-row-hover:hover {
+  background-color: #f9fafb;
+}
+
+/* Search Input */
+.input-search-rounded {
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  padding-left: 40px;
+  height: 40px;
+}
+
 /* ============================================
    LUXURY UTILITIES
    ============================================ */

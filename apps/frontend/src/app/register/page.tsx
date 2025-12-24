@@ -104,7 +104,7 @@ export default function RegisterPage() {
             )}
 
             <div className="space-y-2">
-              <label className="text-[10px] font-bold text-[#d4af37] uppercase tracking-widest ml-1">Work Email</label>
+              <label className="text-[10px] font-bold text-[#d4af37] uppercase tracking-widest ml-1">Email</label>
               <input
                 type="email"
                 required
@@ -116,7 +116,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-bold text-[#d4af37] uppercase tracking-widest ml-1">Master Key</label>
+              <label className="text-[10px] font-bold text-[#d4af37] uppercase tracking-widest ml-1">Password</label>
               <input
                 type="password"
                 required
@@ -139,7 +139,7 @@ export default function RegisterPage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-[#d4af37] uppercase tracking-widest ml-1">Binance Secret</label>
+                <label className="text-[10px] font-bold text-[#d4af37] uppercase tracking-widest ml-1">Binance Secret Key</label>
                 <input
                   type="password"
                   value={formData.binanceSecretKey}
